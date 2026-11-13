@@ -12,6 +12,23 @@ public class StudentView implements LineObserver {
     private final LineController controller;
     private final ConsoleInput input;
     private final TaView taView;
+    // TODO(Al-Farouq, D4): two changes to this class (see TEAM-TODO.md).
+    //
+    // 1. Show the wait-time estimate next to each name:
+    //    entry.getEstimatedWaitMinutes() is the minutes, or -1 when nobody
+    //    has been helped yet. Print "1. Ana (3 min, about 5 more)" or
+    //    "1. Ana (3 min, estimate after first student)".
+    //
+    // 2. D4 Exceeds for "View connected to the model" is "the view keeps
+    //    no copy of model state", and the `latest` field below is a copy.
+    //    Remove it: draw the line inside update(snapshot) instead of
+    //    storing it. Only draw when controller.isTaMode() is false, or
+    //    the student and TA screens both print on every change. When
+    //    snapshot.isClosed(), print the final stats there and set a
+    //    boolean so run() stops. "3) Show the line" is no longer needed
+    //    (the line redraws itself after every change), so the menu
+    //    becomes 1 Join, 2 Leave, 3 TA login. ViewTest's scripts then use
+    //    "3" for TA login.
     private LineSnapshot latest;
 
     /**

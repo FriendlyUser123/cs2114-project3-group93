@@ -2,6 +2,7 @@ package nextup.view;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -59,6 +60,37 @@ public class ViewTest {
         assertTrue(output.contains("Try again? (y/n)"));
         assertTrue(output.contains("Your ticket is"));
         assertTrue(output.contains("Wrong PIN"));
+    }
+
+    /**
+     * D4 (Al-Farouq): the wait-time estimate shows on both screens.
+     *
+     * Cases: before anyone is finished, the student screen shows the
+     * "no estimate yet" text (estimate is -1). After the TA helps one
+     * student, the next student's line shows "about N min". Use
+     * FakeTimeSource: runSession builds the line with one, so keep a
+     * reference to it and call advanceMinutes between "call next" and
+     * "finish".
+     */
+    @Test
+    public void testShowsEstimates() {
+        // TODO(Al-Farouq, D4)
+        fail("TODO(Al-Farouq, D4): estimate text on both screens");
+    }
+
+    /**
+     * D4 (Al-Farouq): Leave and Put back through the menus.
+     *
+     * Cases: a student leaves with their real ticket (read it from the
+     * "Your ticket is NNNN." line, or use Random(42), which always gives
+     * the same tickets) and disappears from the line; leaving with "abc"
+     * prints "Enter your ticket number, like 4821."; the TA calls Ana,
+     * puts her back, and she is #1 again.
+     */
+    @Test
+    public void testLeaveAndPutBack() {
+        // TODO(Al-Farouq, D4)
+        fail("TODO(Al-Farouq, D4): leave and put back");
     }
 
     private String runSession(String script) {

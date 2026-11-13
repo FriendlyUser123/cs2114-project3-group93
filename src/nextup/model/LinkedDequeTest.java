@@ -217,4 +217,27 @@ public class LinkedDequeTest extends student.TestCase {
         deque.enqueue("c");
         assertEquals(Arrays.asList("a", "b"), snapshot);
     }
+
+
+    /**
+     * D4 (Nicolas): order after INTERLEAVED enqueues and dequeues. This is
+     * the D4 rubric's Exceeds box for "JUnit Tests", so it must check the
+     * order after every step, not just at the end.
+     *
+     * Cases to write (one assert per arrow):
+     * <pre>
+     * enqueue a, enqueue b         -> dequeue gives a
+     * enqueue c                    -> toList is [b, c]
+     * dequeue                      -> b
+     * enqueue d, addToFront e      -> toList is [e, c, d]
+     * dequeue, dequeue             -> e, then c
+     * enqueue f                    -> toList is [d, f], size 2
+     * dequeue, dequeue             -> d, then f, then isEmpty() is true
+     * dequeue once more            -> NoSuchElementException (bad input)
+     * </pre>
+     */
+    public void testInterleavedOrder() {
+        // TODO(Nicolas, D4): replace this line with the cases above.
+        fail("TODO(Nicolas, D4): interleaved enqueue/dequeue order");
+    }
 }

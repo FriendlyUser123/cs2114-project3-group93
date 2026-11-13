@@ -11,6 +11,18 @@ public class TaView implements LineObserver {
 
     private final LineController controller;
     private final ConsoleInput input;
+    // TODO(Al-Farouq, D4): two changes to this class (see TEAM-TODO.md).
+    //
+    // 1. Show the wait-time estimate next to each waiting name:
+    //    entry.getEstimatedWaitMinutes() is the minutes, or -1 when nobody
+    //    has been helped yet. Print "1. Ben - Generics? - 3 min (about
+    //    5 more)" or "... (estimate after first student)".
+    //
+    // 2. D4 Exceeds: "the view keeps no copy of model state". Remove the
+    //    `latest` field and draw inside update(snapshot), but only when
+    //    controller.isTaMode() is true (otherwise the student screen is
+    //    showing). run() then just reads the menu choice and prints each
+    //    ActionResult; the model's update draws the line for you.
     private LineSnapshot latest;
 
     /**
