@@ -63,9 +63,11 @@ public class ConsoleInput {
      *         (Ctrl+D) so the caller can stop cleanly
      */
     public String readLine(String prompt) {
-        if(scanner.hasNextLine()){
-            System.out.println(prompt);
-        }else{
+        // Print first: hasNextLine() waits for the user to type, so
+        // checking it before printing would show each prompt too late.
+        System.out.print(prompt);
+        System.out.flush();
+        if (!scanner.hasNextLine()) {
             return null;
         }
         return scanner.nextLine();
