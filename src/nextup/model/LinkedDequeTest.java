@@ -26,6 +26,10 @@
 
 package nextup.model;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.NoSuchElementException;
+
 /**
  * OWNER: Nicolas Marchese. Tests LinkedDeque using Strings.
  *
@@ -56,7 +60,16 @@ public class LinkedDequeTest extends student.TestCase {
      * NoSuchElementException.
      */
     public void testConstructor() {
-        fail("TODO(Nicolas): testConstructor");
+        assertTrue(deque.isEmpty());
+        assertEquals(0, deque.size());
+        assertTrue(deque.toList().isEmpty());
+        try {
+            deque.peek();
+            fail("Empty peek must throw.");
+        }
+        catch (NoSuchElementException expected) {
+            assertEquals(0, deque.size());
+        }
     }
 
 
@@ -65,7 +78,18 @@ public class LinkedDequeTest extends student.TestCase {
      * IllegalArgumentException, size unchanged.
      */
     public void testEnqueue() {
-        fail("TODO(Nicolas): testEnqueue");
+        deque.enqueue("a");
+        deque.enqueue("b");
+        assertEquals(Arrays.asList("a", "b"), deque.toList());
+        assertEquals(2, deque.size());
+        try {
+            deque.enqueue(null);
+            fail("Null entries must be rejected.");
+        }
+        catch (IllegalArgumentException expected) {
+            assertEquals(Arrays.asList("a", "b"), deque.toList());
+            assertEquals(2, deque.size());
+        }
     }
 
 
@@ -74,7 +98,28 @@ public class LinkedDequeTest extends student.TestCase {
      * Empty: NoSuchElementException for both.
      */
     public void testDequeueAndPeek() {
-        fail("TODO(Nicolas): testDequeueAndPeek");
+        deque.enqueue("a");
+        deque.enqueue("b");
+        assertEquals("a", deque.peek());
+        assertEquals(2, deque.size());
+        assertEquals("a", deque.dequeue());
+        assertEquals(Arrays.asList("b"), deque.toList());
+        assertEquals("b", deque.dequeue());
+        assertTrue(deque.isEmpty());
+        try {
+            deque.dequeue();
+            fail("Empty dequeue must throw.");
+        }
+        catch (NoSuchElementException expected) {
+            assertEquals(0, deque.size());
+        }
+        try {
+            deque.peek();
+            fail("Empty peek must throw.");
+        }
+        catch (NoSuchElementException expected) {
+            assertEquals(0, deque.size());
+        }
     }
 
 
@@ -83,7 +128,22 @@ public class LinkedDequeTest extends student.TestCase {
      * true, 0, and a new enqueue still works.
      */
     public void testIsEmptyAndSize() {
-        fail("TODO(Nicolas): testIsEmptyAndSize");
+        deque.enqueue("a");
+        deque.enqueue("b");
+        deque.enqueue("c");
+        deque.dequeue();
+        assertFalse(deque.isEmpty());
+        assertEquals(2, deque.size());
+        deque.dequeue();
+        deque.dequeue();
+        assertTrue(deque.isEmpty());
+        assertEquals(0, deque.size());
+        deque.enqueue("again");
+        assertEquals("again", deque.dequeue());
+        assertTrue(deque.isEmpty());
+        deque.enqueue("last");
+        assertEquals("last", deque.peek());
+        assertEquals(1, deque.size());
     }
 
 
@@ -93,7 +153,24 @@ public class LinkedDequeTest extends student.TestCase {
      * deque unchanged.
      */
     public void testAddToFront() {
-        fail("TODO(Nicolas): testAddToFront");
+        deque.enqueue("a");
+        deque.addToFront("b");
+        assertEquals(Arrays.asList("b", "a"), deque.toList());
+        assertEquals("b", deque.dequeue());
+        assertEquals("a", deque.dequeue());
+        deque.addToFront("b");
+        assertEquals("b", deque.peek());
+        assertEquals(1, deque.size());
+        try {
+            deque.addToFront(null);
+            fail("Null entries must be rejected.");
+        }
+        catch (IllegalArgumentException expected) {
+            assertEquals(Arrays.asList("b"), deque.toList());
+            assertEquals(1, deque.size());
+        }
+        deque.enqueue("c");
+        assertEquals(Arrays.asList("b", "c"), deque.toList());
     }
 
 
@@ -104,7 +181,32 @@ public class LinkedDequeTest extends student.TestCase {
      * Empty: false.
      */
     public void testRemove() {
-        fail("TODO(Nicolas): testRemove");
+        assertFalse(deque.remove("a"));
+        assertFalse(deque.remove(null));
+        deque.enqueue("a");
+        deque.enqueue("b");
+        deque.enqueue("c");
+        assertFalse(deque.remove("z"));
+        assertFalse(deque.remove(null));
+        assertEquals(3, deque.size());
+        assertTrue(deque.remove(new String("b")));
+        assertEquals(Arrays.asList("a", "c"), deque.toList());
+        assertEquals(2, deque.size());
+        assertTrue(deque.remove("a"));
+        assertEquals("c", deque.peek());
+        assertTrue(deque.remove("c"));
+        assertTrue(deque.isEmpty());
+        assertEquals(0, deque.size());
+        deque.enqueue("a");
+        deque.enqueue("b");
+        deque.enqueue("a");
+        assertTrue(deque.remove("a"));
+        assertEquals(Arrays.asList("b", "a"), deque.toList());
+        assertEquals("b", deque.dequeue());
+        assertEquals("a", deque.dequeue());
+        assertTrue(deque.isEmpty());
+        deque.addToFront("reused");
+        assertEquals("reused", deque.dequeue());
     }
 
 
@@ -113,6 +215,20 @@ public class LinkedDequeTest extends student.TestCase {
      * Empty: an empty list, not null.
      */
     public void testToList() {
-        fail("TODO(Nicolas): testToList");
+        List<String> empty = deque.toList();
+        assertNotNull(empty);
+        assertTrue(empty.isEmpty());
+        empty.add("outside");
+        assertTrue(deque.isEmpty());
+        deque.enqueue("a");
+        deque.enqueue("b");
+        List<String> copy = deque.toList();
+        assertEquals(Arrays.asList("a", "b"), copy);
+        copy.clear();
+        assertEquals(2, deque.size());
+        assertEquals(Arrays.asList("a", "b"), deque.toList());
+        List<String> snapshot = deque.toList();
+        deque.enqueue("c");
+        assertEquals(Arrays.asList("a", "b"), snapshot);
     }
 }

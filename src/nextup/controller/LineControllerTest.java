@@ -4,7 +4,7 @@
 // As a Hokie, I will conduct myself with honor and integrity at all times.
 // I will not lie, cheat, or steal, nor will I accept the actions of those who
 // do.
-// -- TODO(Ha Minh): Your Name (your PID)
+// -- Ha Minh Nguyen (PID to be confirmed before submission)
 
 // LLM Statement:
 //
@@ -33,14 +33,14 @@ import nextup.model.RecordingObserver;
 
 /**
  * OWNER: Ha Minh Nguyen. Tests LineController and ActionResult against the
- * REAL model (OfficeHoursLine), with no view. Replace each fail(...) with
- * asserts. The cases come from our D2 test plan.
+ * REAL model (OfficeHoursLine), with no view. Exercises the D2 contract with
+ * assertions. The cases come from our D2 test plan.
  *
  * Useful: observer.getLast().getWaiting().size() tells you whether the line
  * changed.
  *
- * @author TODO(Ha Minh): Ha Minh Nguyen (your PID)
- * @version 2026.11.08
+ * @author Ha Minh Nguyen
+ * @version 2026.11.13
  */
 public class LineControllerTest extends student.TestCase {
 
@@ -67,7 +67,27 @@ public class LineControllerTest extends student.TestCase {
      * IllegalArgumentException.
      */
     public void testActionResult() {
-        fail("TODO(Ha Minh): testActionResult");
+        ActionResult ok = ActionResult.ok("Done");
+        assertTrue(ok.isOk());
+        assertEquals("Done", ok.getMessage());
+        ActionResult failed = ActionResult.fail("No");
+        assertFalse(failed.isOk());
+        assertEquals("No", failed.getMessage());
+        assertEquals("", ActionResult.ok("").getMessage());
+        try {
+            ActionResult.ok(null);
+            fail("A null message must be rejected.");
+        }
+        catch (IllegalArgumentException expected) {
+            // Expected.
+        }
+        try {
+            ActionResult.fail(null);
+            fail("A null message must be rejected.");
+        }
+        catch (IllegalArgumentException expected) {
+            // Expected.
+        }
     }
 
 
@@ -76,7 +96,14 @@ public class LineControllerTest extends student.TestCase {
      * starts off.
      */
     public void testConstructor() {
-        fail("TODO(Ha Minh): testConstructor");
+        assertFalse(controller.isTaMode());
+        try {
+            new LineController(null);
+            fail("A null model must be rejected.");
+        }
+        catch (IllegalArgumentException expected) {
+            // Expected.
+        }
     }
 
 
@@ -85,7 +112,20 @@ public class LineControllerTest extends student.TestCase {
      * first one still works.
      */
     public void testSetTaPin() {
-        fail("TODO(Ha Minh): testSetTaPin");
+        LineController fresh = new LineController(model);
+        String[] badPins = {null, "", "12", "abcd", "123456789", "12 34",
+            " 1234", "1234 "};
+        for (String pin : badPins) {
+            assertFalse(fresh.setTaPin(pin).isOk());
+            assertFalse(fresh.isTaMode());
+        }
+        assertTrue(fresh.setTaPin("0000").isOk());
+        assertFalse(fresh.setTaPin("5678").isOk());
+        assertFalse(fresh.taLogin("5678").isOk());
+        assertTrue(fresh.taLogin("0000").isOk());
+        LineController longest = new LineController(model);
+        assertTrue(longest.setTaPin("12345678").isOk());
+        assertTrue(longest.taLogin("12345678").isOk());
     }
 
 
@@ -94,7 +134,20 @@ public class LineControllerTest extends student.TestCase {
      * (e.g. blank name) becomes a failed result with the SAME message.
      */
     public void testJoin() {
-        fail("TODO(Ha Minh): testJoin");
+        ActionResult result = controller.join("Ana", "Recursion?");
+        assertTrue(result.isOk());
+        assertEquals(1, observer.getLast().getWaiting().size());
+        int expectedTicket = 1000 + new Random(42).nextInt(9000);
+        assertEquals("You're #1. Your ticket is " + expectedTicket + ".",
+            result.getMessage());
+        assertFalse(controller.join(" ", "Question").isOk());
+        assertEquals("Name can't be blank.",
+            controller.join(" ", "Question").getMessage());
+        assertEquals("Question can't be blank.",
+            controller.join("Ben", null).getMessage());
+        assertEquals("You're already in line at #1.",
+            controller.join(" ana ", "Again").getMessage());
+        assertEquals(1, observer.getLast().getWaiting().size());
     }
 
 
@@ -104,7 +157,20 @@ public class LineControllerTest extends student.TestCase {
      * with a real ticket: ok, line shorter.
      */
     public void testLeave() {
-        fail("TODO(Ha Minh): testLeave");
+        int ticket = model.join("Ana", "Question");
+        String[] badTickets = {null, "", " ", "abc", "4.2", "999999999999"};
+        for (String text : badTickets) {
+            ActionResult result = controller.leave(text);
+            assertFalse(result.isOk());
+            assertEquals("Enter your ticket number, like 4821.",
+                result.getMessage());
+            assertEquals(1, model.getSnapshot().getWaiting().size());
+        }
+        assertEquals("No ticket #57 in line",
+            controller.leave("57").getMessage());
+        assertTrue(controller.leave(" " + ticket + " ").isOk());
+        assertEquals(0, model.getSnapshot().getWaiting().size());
+        assertFalse(controller.leave(String.valueOf(ticket)).isOk());
     }
 
 
@@ -114,7 +180,23 @@ public class LineControllerTest extends student.TestCase {
      * commands fail "Only a TA can do that."; taLogout when off is safe.
      */
     public void testTaLoginLogout() {
-        fail("TODO(Ha Minh): testTaLoginLogout");
+        LineController fresh = new LineController(model);
+        assertFalse(fresh.taLogin(null).isOk());
+        assertFalse(fresh.taLogin("1234").isOk());
+        assertFalse(fresh.isTaMode());
+        assertEquals("Wrong PIN", controller.taLogin("0000").getMessage());
+        assertFalse(controller.isTaMode());
+        assertEquals("Wrong PIN", controller.taLogin(null).getMessage());
+        assertTrue(controller.taLogin("1234").isOk());
+        assertTrue(controller.isTaMode());
+        controller.taLogout();
+        assertFalse(controller.isTaMode());
+        controller.taLogout();
+        assertEquals("Only a TA can do that.",
+            controller.callNext().getMessage());
+        controller.taLogin("1234");
+        assertFalse(controller.taLogin("0000").isOk());
+        assertFalse(controller.isTaMode());
     }
 
 
@@ -124,7 +206,37 @@ public class LineControllerTest extends student.TestCase {
      * line) comes back as a failed result with the model's message.
      */
     public void testTaCommands() {
-        fail("TODO(Ha Minh): testTaCommands");
+        assertEquals("Only a TA can do that.",
+            controller.callNext().getMessage());
+        assertEquals("Only a TA can do that.",
+            controller.finishCurrent().getMessage());
+        assertEquals("Only a TA can do that.",
+            controller.putBack().getMessage());
+        assertEquals("Only a TA can do that.",
+            controller.closeLine().getMessage());
+        assertFalse(model.getSnapshot().isClosed());
+
+        controller.taLogin("1234");
+        assertEquals("No one is waiting", controller.callNext().getMessage());
+        assertEquals("No one is being helped",
+            controller.finishCurrent().getMessage());
+        assertEquals("No one is being helped",
+            controller.putBack().getMessage());
+        int ticket = model.join("Ana", "Question");
+        clock.advanceMinutes(3);
+        assertTrue(controller.callNext().isOk());
+        assertEquals("Ana", model.getSnapshot().getNowHelping().getName());
+        assertEquals("Finish with Ana first.",
+            controller.callNext().getMessage());
+        assertTrue(controller.putBack().isOk());
+        assertNull(model.getSnapshot().getNowHelping());
+        assertEquals(1, model.positionOf(ticket));
+        assertEquals(0, model.getSnapshot().getHelpedCount());
+        assertTrue(controller.callNext().isOk());
+        assertTrue(controller.finishCurrent().isOk());
+        assertNull(model.getSnapshot().getNowHelping());
+        assertEquals(1, model.getSnapshot().getHelpedCount());
+        assertEquals(3.0, model.getSnapshot().getAverageWaitMinutes(), 0.001);
     }
 
 
@@ -133,6 +245,23 @@ public class LineControllerTest extends student.TestCase {
      * (someone being helped), TA mode stays on.
      */
     public void testCloseLine() {
-        fail("TODO(Ha Minh): testCloseLine");
+        assertFalse(controller.closeLine().isOk());
+        assertFalse(model.getSnapshot().isClosed());
+        controller.taLogin("1234");
+        controller.join("Ana", "Question");
+        controller.callNext();
+        assertFalse(controller.closeLine().isOk());
+        assertTrue(controller.isTaMode());
+        assertFalse(model.getSnapshot().isClosed());
+        controller.finishCurrent();
+        assertTrue(controller.closeLine().isOk());
+        assertFalse(controller.isTaMode());
+        assertTrue(observer.getLast().isClosed());
+        assertEquals("The line is closed.",
+            controller.join("Ben", "Question").getMessage());
+        controller.taLogin("1234");
+        assertEquals("The line is already closed.",
+            controller.closeLine().getMessage());
+        assertTrue(controller.isTaMode());
     }
 }

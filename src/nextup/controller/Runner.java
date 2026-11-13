@@ -4,7 +4,7 @@
 // As a Hokie, I will conduct myself with honor and integrity at all times.
 // I will not lie, cheat, or steal, nor will I accept the actions of those who
 // do.
-// -- TODO(Ha Minh): Your Name (your PID)
+// -- Ha Minh Nguyen (PID to be confirmed before submission)
 
 // LLM Statement:
 //
@@ -26,6 +26,13 @@
 
 package nextup.controller;
 
+import java.util.Random;
+import java.util.Scanner;
+import nextup.model.OfficeHoursLine;
+import nextup.view.ConsoleInput;
+import nextup.view.StudentView;
+import nextup.view.TaView;
+
 /**
  * OWNER: Ha Minh Nguyen. The program's entry point. Creates every object,
  * connects them, and starts the views. No logic of its own (like Runner in
@@ -33,8 +40,8 @@ package nextup.controller;
  *
  * Run it in Eclipse: right-click Runner.java, Run As, Java Application.
  *
- * @author TODO(Ha Minh): Ha Minh Nguyen (your PID)
- * @version 2026.11.08
+ * @author Ha Minh Nguyen
+ * @version 2026.11.13
  */
 public class Runner {
 
@@ -53,19 +60,15 @@ public class Runner {
      *            not used
      */
     public static void main(String[] args) {
-        // TODO(Ha Minh): in this order (from the D2 spec):
-        // 1. OfficeHoursLine line =
-        //        new OfficeHoursLine(System::currentTimeMillis, new Random());
-        // 2. LineController controller = new LineController(line);
-        // 3. ConsoleInput input = new ConsoleInput(new Scanner(System.in));
-        // 4. TaView taView = new TaView(controller, input);
-        //    StudentView studentView =
-        //        new StudentView(controller, input, taView);
-        // 5. line.addObserver(taView); line.addObserver(studentView);
-        // 6. taView.setUpPin();
-        // 7. studentView.run();
-        // You will need imports: java.util.Random, java.util.Scanner,
-        // nextup.model.OfficeHoursLine, nextup.view.*.
-        System.out.println("TODO(Ha Minh): Runner.main");
+        OfficeHoursLine line = new OfficeHoursLine(
+            System::currentTimeMillis, new Random());
+        LineController controller = new LineController(line);
+        ConsoleInput input = new ConsoleInput(new Scanner(System.in));
+        TaView taView = new TaView(controller, input);
+        StudentView studentView = new StudentView(controller, input, taView);
+        line.addObserver(taView);
+        line.addObserver(studentView);
+        taView.setUpPin();
+        studentView.run();
     }
 }

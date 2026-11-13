@@ -4,7 +4,7 @@
 // As a Hokie, I will conduct myself with honor and integrity at all times.
 // I will not lie, cheat, or steal, nor will I accept the actions of those who
 // do.
-// -- TODO(Ha Minh): Your Name (your PID)
+// -- Ha Minh Nguyen (PID to be confirmed before submission)
 
 // LLM Statement:
 //
@@ -38,14 +38,13 @@ package nextup.controller;
  * return ActionResult.fail("Wrong PIN");
  * </pre>
  *
- * @author TODO(Ha Minh): Ha Minh Nguyen (your PID)
- * @version 2026.11.08
+ * @author Ha Minh Nguyen
+ * @version 2026.11.13
  */
 public class ActionResult {
 
-    // TODO(Ha Minh): make both fields final once the constructor sets them.
-    private boolean ok;
-    private String message;
+    private final boolean ok;
+    private final String message;
 
     /**
      * Private: use ok(...) or fail(...).
@@ -58,8 +57,11 @@ public class ActionResult {
      *             if message is null
      */
     private ActionResult(boolean ok, String message) {
-        // TODO(Ha Minh): reject a null message, then store both values.
-        throw new UnsupportedOperationException("TODO(Ha Minh): ActionResult");
+        if (message == null) {
+            throw new IllegalArgumentException("Message must not be null.");
+        }
+        this.ok = ok;
+        this.message = message;
     }
 
 
@@ -73,8 +75,7 @@ public class ActionResult {
      *             if message is null
      */
     public static ActionResult ok(String message) {
-        // TODO(Ha Minh)
-        throw new UnsupportedOperationException("TODO(Ha Minh): ok");
+        return new ActionResult(true, message);
     }
 
 
@@ -88,8 +89,7 @@ public class ActionResult {
      *             if message is null
      */
     public static ActionResult fail(String message) {
-        // TODO(Ha Minh)
-        throw new UnsupportedOperationException("TODO(Ha Minh): fail");
+        return new ActionResult(false, message);
     }
 
 
@@ -99,8 +99,7 @@ public class ActionResult {
      * @return true if it worked
      */
     public boolean isOk() {
-        // TODO(Ha Minh)
-        throw new UnsupportedOperationException("TODO(Ha Minh): isOk");
+        return ok;
     }
 
 
@@ -110,7 +109,6 @@ public class ActionResult {
      * @return the message; never null
      */
     public String getMessage() {
-        // TODO(Ha Minh)
-        throw new UnsupportedOperationException("TODO(Ha Minh): getMessage");
+        return message;
     }
 }

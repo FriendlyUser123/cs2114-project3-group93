@@ -67,15 +67,11 @@ public class LinkedDeque<T> {
      * Creates an empty deque: two sentinels linked to each other.
      */
     public LinkedDeque() {
-        // TODO(Nicolas):
-        // 1. head = new Node<T>(null); tail = new Node<T>(null);
-        // 2. link them: head.next = tail; tail.prev = head;
-        // 3. size = 0;
-        // (Remove the two lines below once done. They are only here so the
-        // file compiles: final fields must be assigned.)
-        head = null;
-        tail = null;
-        throw new UnsupportedOperationException("TODO(Nicolas): LinkedDeque()");
+        head = new Node<T>(null);
+        tail = new Node<T>(null);
+        head.next = tail;
+        tail.prev = head;
+        size = 0;
     }
 
 
@@ -88,9 +84,15 @@ public class LinkedDeque<T> {
      *             if entry is null (deque unchanged)
      */
     public void enqueue(T entry) {
-        // TODO(Nicolas): reject null, then insert a new node between
-        // tail.prev and tail. Remember to fix all four links and size.
-        throw new UnsupportedOperationException("TODO(Nicolas): enqueue");
+        if (entry == null) {
+            throw new IllegalArgumentException("Entry must not be null.");
+        }
+        Node<T> node = new Node<T>(entry);
+        node.prev = tail.prev;
+        node.next = tail;
+        tail.prev.next = node;
+        tail.prev = node;
+        size++;
     }
 
 
@@ -102,9 +104,14 @@ public class LinkedDeque<T> {
      *             if the deque is empty
      */
     public T dequeue() {
-        // TODO(Nicolas): if empty throw NoSuchElementException. Otherwise
-        // unlink head.next and return its data.
-        throw new UnsupportedOperationException("TODO(Nicolas): dequeue");
+        if (isEmpty()) {
+            throw new NoSuchElementException("Deque is empty.");
+        }
+        Node<T> first = head.next;
+        head.next = first.next;
+        first.next.prev = head;
+        size--;
+        return first.data;
     }
 
 
@@ -116,8 +123,10 @@ public class LinkedDeque<T> {
      *             if the deque is empty
      */
     public T peek() {
-        // TODO(Nicolas)
-        throw new UnsupportedOperationException("TODO(Nicolas): peek");
+        if (isEmpty()) {
+            throw new NoSuchElementException("Deque is empty.");
+        }
+        return head.next.data;
     }
 
 
@@ -127,8 +136,7 @@ public class LinkedDeque<T> {
      * @return true if there are no entries
      */
     public boolean isEmpty() {
-        // TODO(Nicolas)
-        throw new UnsupportedOperationException("TODO(Nicolas): isEmpty");
+        return size == 0;
     }
 
 
@@ -138,8 +146,7 @@ public class LinkedDeque<T> {
      * @return the size
      */
     public int size() {
-        // TODO(Nicolas)
-        throw new UnsupportedOperationException("TODO(Nicolas): size");
+        return size;
     }
 
 
@@ -152,8 +159,15 @@ public class LinkedDeque<T> {
      *             if entry is null (deque unchanged)
      */
     public void addToFront(T entry) {
-        // TODO(Nicolas): like enqueue, but between head and head.next.
-        throw new UnsupportedOperationException("TODO(Nicolas): addToFront");
+        if (entry == null) {
+            throw new IllegalArgumentException("Entry must not be null.");
+        }
+        Node<T> node = new Node<T>(entry);
+        node.prev = head;
+        node.next = head.next;
+        head.next.prev = node;
+        head.next = node;
+        size++;
     }
 
 
@@ -167,10 +181,19 @@ public class LinkedDeque<T> {
      *         found, or the deque is empty (deque unchanged)
      */
     public boolean remove(T entry) {
-        // TODO(Nicolas): walk from head.next until you reach tail. When
-        // current.data.equals(entry), link current.prev and current.next
-        // to each other, size--, return true.
-        throw new UnsupportedOperationException("TODO(Nicolas): remove");
+        if (entry == null) {
+            return false;
+        }
+        for (Node<T> current = head.next; current != tail;
+            current = current.next) {
+            if (current.data.equals(entry)) {
+                current.prev.next = current.next;
+                current.next.prev = current.prev;
+                size--;
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -181,9 +204,12 @@ public class LinkedDeque<T> {
      * @return the entries; an empty list (never null) if the deque is empty
      */
     public List<T> toList() {
-        // TODO(Nicolas): new ArrayList<T>(), walk head.next .. tail, add
-        // each data.
-        throw new UnsupportedOperationException("TODO(Nicolas): toList");
+        List<T> entries = new ArrayList<T>();
+        for (Node<T> current = head.next; current != tail;
+            current = current.next) {
+            entries.add(current.data);
+        }
+        return entries;
     }
 
 

@@ -4,7 +4,7 @@
 // As a Hokie, I will conduct myself with honor and integrity at all times.
 // I will not lie, cheat, or steal, nor will I accept the actions of those who
 // do.
-// -- TODO(Ha Minh): Your Name (your PID)
+// -- Ha Minh Nguyen (PID to be confirmed before submission)
 
 // LLM Statement:
 //
@@ -60,8 +60,8 @@ import nextup.model.OfficeHoursLine;
  * Exact messages to use: "Enter your ticket number, like 4821.",
  * "Wrong PIN", "Only a TA can do that."
  *
- * @author TODO(Ha Minh): Ha Minh Nguyen (your PID)
- * @version 2026.11.08
+ * @author Ha Minh Nguyen
+ * @version 2026.11.13
  */
 public class LineController {
 
@@ -78,8 +78,9 @@ public class LineController {
      *             if model is null
      */
     public LineController(OfficeHoursLine model) {
-        // TODO(Ha Minh): reject null. (The assignment below is only here so
-        // the file compiles; keep it after your null check.)
+        if (model == null) {
+            throw new IllegalArgumentException("Model must not be null.");
+        }
         this.model = model;
         taPin = null;
         taMode = false;
@@ -95,8 +96,14 @@ public class LineController {
      *         PIN was already set (PIN unchanged)
      */
     public ActionResult setTaPin(String pin) {
-        // TODO(Ha Minh): hint: pin.matches("\\d{4,8}")
-        throw new UnsupportedOperationException("TODO(Ha Minh): setTaPin");
+        if (taPin != null) {
+            return ActionResult.fail("The TA PIN is already set.");
+        }
+        if (pin == null || !pin.matches("\\d{4,8}")) {
+            return ActionResult.fail("Enter a PIN with 4 to 8 digits.");
+        }
+        taPin = pin;
+        return ActionResult.ok("TA PIN set.");
     }
 
 
@@ -111,8 +118,14 @@ public class LineController {
      *         model's message
      */
     public ActionResult join(String name, String question) {
-        // TODO(Ha Minh): see the example in the class comment.
-        throw new UnsupportedOperationException("TODO(Ha Minh): join");
+        try {
+            int ticket = model.join(name, question);
+            return ActionResult.ok("You're #" + model.positionOf(ticket)
+                + ". Your ticket is " + ticket + ".");
+        }
+        catch (LineRuleException e) {
+            return ActionResult.fail(e.getMessage());
+        }
     }
 
 
@@ -126,9 +139,20 @@ public class LineController {
      *         ticket is waiting
      */
     public ActionResult leave(String ticketText) {
-        // TODO(Ha Minh): Integer.parseInt(ticketText.trim()) inside a try;
-        // catch NumberFormatException. Watch out for null ticketText.
-        throw new UnsupportedOperationException("TODO(Ha Minh): leave");
+        if (ticketText == null) {
+            return ActionResult.fail("Enter your ticket number, like 4821.");
+        }
+        try {
+            int ticket = Integer.parseInt(ticketText.trim());
+            model.leave(ticket);
+            return ActionResult.ok("You left the line.");
+        }
+        catch (NumberFormatException e) {
+            return ActionResult.fail("Enter your ticket number, like 4821.");
+        }
+        catch (LineRuleException e) {
+            return ActionResult.fail(e.getMessage());
+        }
     }
 
 
@@ -141,8 +165,11 @@ public class LineController {
      *         null, or no PIN was ever set
      */
     public ActionResult taLogin(String pin) {
-        // TODO(Ha Minh)
-        throw new UnsupportedOperationException("TODO(Ha Minh): taLogin");
+        taMode = taPin != null && taPin.equals(pin);
+        if (!taMode) {
+            return ActionResult.fail("Wrong PIN");
+        }
+        return ActionResult.ok("TA logged in.");
     }
 
 
@@ -150,8 +177,7 @@ public class LineController {
      * Turns TA mode off. Safe to call when already off.
      */
     public void taLogout() {
-        // TODO(Ha Minh)
-        throw new UnsupportedOperationException("TODO(Ha Minh): taLogout");
+        taMode = false;
     }
 
 
@@ -161,8 +187,7 @@ public class LineController {
      * @return true in TA mode
      */
     public boolean isTaMode() {
-        // TODO(Ha Minh)
-        throw new UnsupportedOperationException("TODO(Ha Minh): isTaMode");
+        return taMode;
     }
 
 
@@ -175,8 +200,17 @@ public class LineController {
      *         message
      */
     public ActionResult callNext() {
-        // TODO(Ha Minh)
-        throw new UnsupportedOperationException("TODO(Ha Minh): callNext");
+        if (!taMode) {
+            return ActionResult.fail("Only a TA can do that.");
+        }
+        try {
+            model.callNext();
+            return ActionResult.ok("Now helping: "
+                + model.getSnapshot().getNowHelping().getName());
+        }
+        catch (LineRuleException e) {
+            return ActionResult.fail(e.getMessage());
+        }
     }
 
 
@@ -186,9 +220,16 @@ public class LineController {
      * @return same pattern as callNext
      */
     public ActionResult finishCurrent() {
-        // TODO(Ha Minh)
-        throw new UnsupportedOperationException(
-            "TODO(Ha Minh): finishCurrent");
+        if (!taMode) {
+            return ActionResult.fail("Only a TA can do that.");
+        }
+        try {
+            model.finishCurrent();
+            return ActionResult.ok("Finished helping the current student.");
+        }
+        catch (LineRuleException e) {
+            return ActionResult.fail(e.getMessage());
+        }
     }
 
 
@@ -198,8 +239,16 @@ public class LineController {
      * @return same pattern as callNext
      */
     public ActionResult putBack() {
-        // TODO(Ha Minh)
-        throw new UnsupportedOperationException("TODO(Ha Minh): putBack");
+        if (!taMode) {
+            return ActionResult.fail("Only a TA can do that.");
+        }
+        try {
+            model.putBack();
+            return ActionResult.ok("Student put back at the front.");
+        }
+        catch (LineRuleException e) {
+            return ActionResult.fail(e.getMessage());
+        }
     }
 
 
@@ -210,7 +259,16 @@ public class LineController {
      *         final stats from model.getSnapshot()
      */
     public ActionResult closeLine() {
-        // TODO(Ha Minh)
-        throw new UnsupportedOperationException("TODO(Ha Minh): closeLine");
+        if (!taMode) {
+            return ActionResult.fail("Only a TA can do that.");
+        }
+        try {
+            model.closeLine();
+            taMode = false;
+            return ActionResult.ok("The line is closed.");
+        }
+        catch (LineRuleException e) {
+            return ActionResult.fail(e.getMessage());
+        }
     }
 }
