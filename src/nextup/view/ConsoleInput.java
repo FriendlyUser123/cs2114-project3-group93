@@ -4,7 +4,7 @@
 // As a Hokie, I will conduct myself with honor and integrity at all times.
 // I will not lie, cheat, or steal, nor will I accept the actions of those who
 // do.
-// -- TODO(Al-Farouq): Your Name (your PID)
+// -- Al-Farouq Mohamed 906907118
 
 // LLM Statement:
 //
@@ -63,10 +63,12 @@ public class ConsoleInput {
      *         (Ctrl+D) so the caller can stop cleanly
      */
     public String readLine(String prompt) {
-        // TODO(Al-Farouq): System.out.print(prompt); then
-        // if (!scanner.hasNextLine()) return null; else return
-        // scanner.nextLine();
-        throw new UnsupportedOperationException("TODO(Al-Farouq): readLine");
+        if(scanner.hasNextLine()){
+            System.out.println(prompt);
+        }else{
+            return null;
+        }
+        return scanner.nextLine();
     }
 
 
@@ -82,10 +84,21 @@ public class ConsoleInput {
      * @return a number from 1 to max, or -1 if input has ended
      */
     public int readMenuChoice(String prompt, int max) {
-        // TODO(Al-Farouq): loop: text = readLine(prompt); if null return -1;
-        // try Integer.parseInt(text.trim()); if 1..max return it; otherwise
-        // print "Enter a number 1 to " + max + "." and loop.
-        throw new UnsupportedOperationException(
-            "TODO(Al-Farouq): readMenuChoice");
+        while(true){
+            String input = readLine(prompt);
+            if(input == null){
+                return -1;
+            }
+            try{
+                int choice = Integer.parseInt(input.trim());
+                if(choice >= 1 && choice <= max){
+                    return choice;
+                }
+            }catch(NumberFormatException e){
+
+            }
+
+            System.out.println("Enter a number 1 to " + max + ".");
+        }
     }
 }
