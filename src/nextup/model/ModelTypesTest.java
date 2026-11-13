@@ -26,7 +26,7 @@ import java.util.List;
  * table of the D2 test plan).
  *
  * @author Aditya Banerjee (adityab7)
- * @version 2026.11.08
+ * @version 2026.11.13
  */
 public class ModelTypesTest extends student.TestCase {
 
@@ -88,23 +88,30 @@ public class ModelTypesTest extends student.TestCase {
      * LineEntry stores and returns its values.
      */
     public void testLineEntry() {
-        LineEntry entry = new LineEntry(1, "Ana", "Recursion?", 2);
+        LineEntry entry = new LineEntry(1, "Ana", "Recursion?", 2, -1);
         assertEquals(1, entry.getPosition());
         assertEquals("Ana", entry.getName());
         assertEquals("Recursion?", entry.getQuestion());
         assertEquals(2, entry.getMinutesWaited());
-        assertEquals(0, new LineEntry(0, "a", "b", 0).getPosition());
+        assertEquals(-1, entry.getEstimatedWaitMinutes());
+        assertEquals(15, new LineEntry(3, "Cal", "Q", 0, 15)
+            .getEstimatedWaitMinutes());
+        assertEquals(0, new LineEntry(0, "a", "b", 0, 0)
+            .getEstimatedWaitMinutes());
+        assertEquals(0, new LineEntry(0, "a", "b", 0, -1).getPosition());
     }
 
 
     /**
-     * LineEntry rejects negative numbers and null text.
+     * LineEntry rejects negative numbers, an estimate below -1 (-1 means
+     * "no estimate yet"), and null text.
      */
     public void testLineEntryBadInput() {
-        assertIllegal(() -> new LineEntry(-1, "Ana", "Q", 0));
-        assertIllegal(() -> new LineEntry(1, "Ana", "Q", -1));
-        assertIllegal(() -> new LineEntry(1, null, "Q", 0));
-        assertIllegal(() -> new LineEntry(1, "Ana", null, 0));
+        assertIllegal(() -> new LineEntry(-1, "Ana", "Q", 0, -1));
+        assertIllegal(() -> new LineEntry(1, "Ana", "Q", -1, -1));
+        assertIllegal(() -> new LineEntry(1, null, "Q", 0, -1));
+        assertIllegal(() -> new LineEntry(1, "Ana", null, 0, -1));
+        assertIllegal(() -> new LineEntry(1, "Ana", "Q", 0, -2));
     }
 
 
@@ -112,9 +119,9 @@ public class ModelTypesTest extends student.TestCase {
      * LineSnapshot returns its values and copies the list.
      */
     public void testLineSnapshot() {
-        LineEntry helping = new LineEntry(0, "Ana", "Q", 1);
+        LineEntry helping = new LineEntry(0, "Ana", "Q", 1, -1);
         List<LineEntry> list = new ArrayList<LineEntry>();
-        list.add(new LineEntry(1, "Ben", "Q", 0));
+        list.add(new LineEntry(1, "Ben", "Q", 0, -1));
         LineSnapshot snap = new LineSnapshot(helping, list, 3, 2.5, true);
         assertSame(helping, snap.getNowHelping());
         assertEquals(1, snap.getWaiting().size());
@@ -141,7 +148,7 @@ public class ModelTypesTest extends student.TestCase {
             new ArrayList<LineEntry>(), 0, 0.0, false);
         Exception thrown = null;
         try {
-            snap.getWaiting().add(new LineEntry(1, "a", "b", 0));
+            snap.getWaiting().add(new LineEntry(1, "a", "b", 0, -1));
         }
         catch (Exception exception) {
             thrown = exception;

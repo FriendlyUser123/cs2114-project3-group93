@@ -22,7 +22,7 @@ package nextup.model;
  * student. It has no ticket field on purpose.
  *
  * @author Aditya Banerjee (adityab7)
- * @version 2026.11.08
+ * @version 2026.11.13
  */
 public class LineEntry {
 
@@ -30,6 +30,7 @@ public class LineEntry {
     private final String name;
     private final String question;
     private final int minutesWaited;
+    private final int estimatedWaitMinutes;
 
     /**
      * Creates one row.
@@ -44,17 +45,27 @@ public class LineEntry {
      * @param minutesWaited
      *            whole minutes waited so far (for the student being
      *            helped, minutes waited before being called)
+     * @param estimatedWaitMinutes
+     *            estimated whole minutes until this student is called, 0
+     *            for the student being helped, or -1 if there is no
+     *            estimate yet (nobody has been helped)
      * @throws IllegalArgumentException
-     *             if a number is negative or a text value is null
+     *             if position or minutesWaited is negative, the estimate
+     *             is below -1, or a text value is null
      */
     public LineEntry(
         int position,
         String name,
         String question,
-        int minutesWaited) {
+        int minutesWaited,
+        int estimatedWaitMinutes) {
         if (position < 0 || minutesWaited < 0) {
             throw new IllegalArgumentException(
                 "Position and minutes must not be negative.");
+        }
+        if (estimatedWaitMinutes < -1) {
+            throw new IllegalArgumentException(
+                "The estimate must be -1 (none yet) or more.");
         }
         if (name == null || question == null) {
             throw new IllegalArgumentException(
@@ -64,6 +75,7 @@ public class LineEntry {
         this.name = name;
         this.question = question;
         this.minutesWaited = minutesWaited;
+        this.estimatedWaitMinutes = estimatedWaitMinutes;
     }
 
 
@@ -105,5 +117,16 @@ public class LineEntry {
      */
     public int getMinutesWaited() {
         return minutesWaited;
+    }
+
+
+    /**
+     * Returns the estimated whole minutes until this student is called.
+     *
+     * @return the estimate, 0 for the student being helped, or -1 if
+     *         there is no estimate yet
+     */
+    public int getEstimatedWaitMinutes() {
+        return estimatedWaitMinutes;
     }
 }

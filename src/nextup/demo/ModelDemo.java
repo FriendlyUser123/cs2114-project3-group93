@@ -35,7 +35,7 @@ import nextup.model.OfficeHoursLine;
  * model package must never use System.out.
  *
  * @author Aditya Banerjee (adityab7)
- * @version 2026.11.08
+ * @version 2026.11.13
  */
 public class ModelDemo {
 
@@ -88,10 +88,20 @@ public class ModelDemo {
         System.out.println("> TA puts Ana back (front of line)");
         line.putBack();
         fakeNow += 60000;
-        System.out.println("> 1 minute later, call next and finish");
+        System.out.println("> 1 minute later, call Ana; help her 4 minutes");
         line.callNext();
+        fakeNow += 4 * 60000;
         line.finishCurrent();
+        System.out.println("> Dee joins: Cal is ~4 min away, Dee ~8 (the"
+            + " wait-time estimate)");
+        line.join("Dee", "Big-O?");
+        System.out.println("> Help Cal for 6 minutes (average help is now 5)");
         line.callNext();
+        fakeNow += 6 * 60000;
+        line.finishCurrent();
+        System.out.println("> Help Dee for 5 minutes");
+        line.callNext();
+        fakeNow += 5 * 60000;
         line.finishCurrent();
 
         System.out.println("> Bad input: call next on an empty line");
@@ -99,7 +109,7 @@ public class ModelDemo {
         System.out.println("> TA closes the line");
         line.closeLine();
         System.out.println("> Bad input: join after close");
-        tryRule(() -> line.join("Dee", "Late?"));
+        tryRule(() -> line.join("Eve", "Late?"));
     }
 
 
@@ -133,10 +143,16 @@ public class ModelDemo {
         text.append(" | waiting:");
         for (LineEntry entry : snapshot.getWaiting()) {
             text.append(" " + entry.getPosition() + "." + entry.getName()
-                + "(" + entry.getMinutesWaited() + "m)");
+                + "(" + entry.getMinutesWaited() + "m");
+            if (entry.getEstimatedWaitMinutes() >= 0) {
+                text.append(", est " + entry.getEstimatedWaitMinutes()
+                    + "m");
+            }
+            text.append(")");
         }
         text.append(" | helped " + snapshot.getHelpedCount() + ", avg "
-            + snapshot.getAverageWaitMinutes() + " min");
+            + String.format("%.1f", snapshot.getAverageWaitMinutes())
+            + " min");
         if (snapshot.isClosed()) {
             text.append(" | CLOSED");
         }

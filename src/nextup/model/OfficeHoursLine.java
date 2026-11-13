@@ -36,7 +36,7 @@ import java.util.Random;
  * line exactly as it was (no change, no observer update).
  *
  * @author Aditya Banerjee (adityab7)
- * @version 2026.11.08
+ * @version 2026.11.13
  */
 public class OfficeHoursLine {
 
@@ -63,6 +63,7 @@ public class OfficeHoursLine {
     private long calledAtMillis;
     private int helpedCount;
     private long totalWaitMillis;
+    private long totalHelpMillis;
     private boolean closed;
 
     /**
@@ -90,6 +91,7 @@ public class OfficeHoursLine {
         calledAtMillis = 0;
         helpedCount = 0;
         totalWaitMillis = 0;
+        totalHelpMillis = 0;
         closed = false;
     }
 
@@ -236,8 +238,9 @@ public class OfficeHoursLine {
 
 
     /**
-     * Finishes with the student being helped: counts them as helped and
-     * adds their wait (join to called) to the stats.
+     * Finishes with the student being helped: counts them as helped, adds
+     * their wait (join to called) to the stats, and adds how long they were
+     * helped (called to now) to the total that wait estimates use.
      *
      * @throws LineRuleException
      *             if nobody is being helped
@@ -246,6 +249,7 @@ public class OfficeHoursLine {
         requireSomeoneHelped();
         helpedCount++;
         totalWaitMillis += calledAtMillis - nowHelping.getJoinedAtMillis();
+        totalHelpMillis += clock.nowMillis() - calledAtMillis;
         nowHelping = null;
         notifyObservers();
     }
@@ -254,7 +258,9 @@ public class OfficeHoursLine {
     /**
      * Puts the student being helped back at the FRONT of the line, with
      * the same ticket and join time. This is the one case where FIFO would
-     * be unfair, so it is allowed even with 50 waiting (making 51).
+     * be unfair, so it is allowed even with 50 waiting (making 51). The
+     * time spent with them does not count toward wait estimates, because
+     * the help session did not finish.
      *
      * @throws LineRuleException
      *             if nobody is being helped
@@ -297,12 +303,13 @@ public class OfficeHoursLine {
         long now = clock.nowMillis();
         LineEntry helping = null;
         if (nowHelping != null) {
-            helping = toEntry(nowHelping, 0, calledAtMillis);
+            helping = toEntry(nowHelping, 0, calledAtMillis, 0);
         }
         List<LineEntry> entries = new ArrayList<LineEntry>();
         List<HelpRequest> line = waiting.toList();
         for (int i = 0; i < line.size(); i++) {
-            entries.add(toEntry(line.get(i), i + 1, now));
+            entries.add(toEntry(line.get(i), i + 1, now,
+                estimateMinutes(i + 1)));
         }
         double average = 0.0;
         if (helpedCount > 0) {
@@ -399,16 +406,43 @@ public class OfficeHoursLine {
      *            its position (0 for being helped)
      * @param untilMillis
      *            the end of the wait to measure
+     * @param estimate
+     *            the estimated wait in minutes, 0 for the student being
+     *            helped, or -1 if there is no estimate yet
      * @return the row
      */
     private LineEntry toEntry(
         HelpRequest request,
         int position,
-        long untilMillis) {
+        long untilMillis,
+        int estimate) {
         long waited = untilMillis - request.getJoinedAtMillis();
         int minutes = (int)(Math.max(0, waited) / MILLIS_PER_MINUTE);
         return new LineEntry(position, request.getName(),
-            request.getQuestion(), minutes);
+            request.getQuestion(), minutes, estimate);
+    }
+
+
+    /**
+     * Estimates how many minutes until the student at a position is
+     * called: their position times the average length of a finished help
+     * session, rounded up to a whole minute. Put-backs never count as a
+     * session, so one long put-back can't skew the estimate.
+     *
+     * Example: sessions of 4 and 6 minutes average 5, so position 3 is
+     * about 15 minutes away.
+     *
+     * @param position
+     *            1 for the front of the line
+     * @return the estimate in whole minutes, or -1 if nobody has been
+     *         helped yet (there is nothing to base it on)
+     */
+    private int estimateMinutes(int position) {
+        if (helpedCount == 0) {
+            return -1;
+        }
+        long millis = position * totalHelpMillis / helpedCount;
+        return (int)((millis + MILLIS_PER_MINUTE - 1) / MILLIS_PER_MINUTE);
     }
 
 

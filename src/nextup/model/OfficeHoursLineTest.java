@@ -26,7 +26,7 @@ import java.util.Random;
  * row of the D2 test plan.
  *
  * @author Aditya Banerjee (adityab7)
- * @version 2026.11.08
+ * @version 2026.11.13
  */
 public class OfficeHoursLineTest extends student.TestCase {
 
@@ -432,5 +432,106 @@ public class OfficeHoursLineTest extends student.TestCase {
             }
         }
         assertEquals(2000, line.getSnapshot().getHelpedCount());
+    }
+
+
+    /**
+     * Joins Ana, Ben, and Cal, then helps Ana for 4 minutes and Ben for
+     * 6 minutes. Used by the estimate tests.
+     */
+    private void helpTwoFor4And6Minutes() {
+        line.join("Ana", "Q");
+        line.join("Ben", "Q");
+        line.join("Cal", "Q");
+        line.join("Dee", "Q");
+        line.join("Eve", "Q");
+        line.callNext();
+        clock.advanceMinutes(4);
+        line.finishCurrent();
+        line.callNext();
+        clock.advanceMinutes(6);
+        line.finishCurrent();
+    }
+
+
+    /**
+     * Estimates: before anyone has been helped there is nothing to base
+     * one on, so every waiting student gets -1.
+     */
+    public void testEstimateBeforeAnyHelp() {
+        line.join("Ana", "Q");
+        line.join("Ben", "Q");
+        clock.advanceMinutes(10);
+        line.callNext(); // being helped, but not finished
+        List<LineEntry> waiting = observer.getLast().getWaiting();
+        assertEquals(-1, waiting.get(0).getEstimatedWaitMinutes());
+        assertEquals(0, observer.getLast().getNowHelping()
+            .getEstimatedWaitMinutes());
+    }
+
+
+    /**
+     * Estimates: sessions of 4 and 6 minutes average 5, so positions 1, 2,
+     * and 3 are about 5, 10, and 15 minutes away.
+     */
+    public void testEstimateAfterTwoSessions() {
+        helpTwoFor4And6Minutes();
+        List<LineEntry> waiting = observer.getLast().getWaiting();
+        assertEquals(3, waiting.size());
+        assertEquals(5, waiting.get(0).getEstimatedWaitMinutes());
+        assertEquals(10, waiting.get(1).getEstimatedWaitMinutes());
+        assertEquals(15, waiting.get(2).getEstimatedWaitMinutes());
+    }
+
+
+    /**
+     * Estimates round UP to a whole minute: one 90-second session makes
+     * the front of the line "2 minutes", not "1".
+     */
+    public void testEstimateRoundsUp() {
+        line.join("Ana", "Q");
+        line.join("Ben", "Q");
+        line.callNext();
+        clock.setMillis(90000);
+        line.finishCurrent();
+        assertEquals(2, observer.getLast().getWaiting().get(0)
+            .getEstimatedWaitMinutes());
+    }
+
+
+    /**
+     * Estimates: time spent with a student who is put back does not count
+     * as a help session.
+     */
+    public void testEstimatePutBackDoesNotCount() {
+        helpTwoFor4And6Minutes();
+        line.callNext();
+        clock.advanceMinutes(30); // a long session that does not finish
+        line.putBack();
+        List<LineEntry> waiting = observer.getLast().getWaiting();
+        assertEquals(5, waiting.get(0).getEstimatedWaitMinutes());
+        assertEquals(15, waiting.get(2).getEstimatedWaitMinutes());
+    }
+
+
+    /**
+     * Estimates follow the line: when someone ahead leaves, everyone
+     * behind moves up and their estimate drops.
+     */
+    public void testEstimateUpdatesAfterLeave() {
+        line.join("Ana", "Q");
+        line.join("Ben", "Q");
+        line.callNext();
+        clock.advanceMinutes(5);
+        line.finishCurrent();
+        int cal = line.join("Cal", "Q");
+        line.join("Dee", "Q");
+        List<LineEntry> before = observer.getLast().getWaiting();
+        assertEquals("Dee", before.get(2).getName());
+        assertEquals(15, before.get(2).getEstimatedWaitMinutes());
+        line.leave(cal);
+        List<LineEntry> after = observer.getLast().getWaiting();
+        assertEquals("Dee", after.get(1).getName());
+        assertEquals(10, after.get(1).getEstimatedWaitMinutes());
     }
 }
