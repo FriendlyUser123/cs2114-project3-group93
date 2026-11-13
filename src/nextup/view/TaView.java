@@ -84,7 +84,9 @@ public class TaView implements LineObserver {
             }
 
             System.out.println("Helped: " + latest.getHelpedCount()
-                    + ", average wait " + latest.getAverageWaitMinutes() + " min");
+                    + ", average wait "
+                    + String.format("%.1f", latest.getAverageWaitMinutes())
+                    + " min");
             System.out.println("1) Call next  2) Finish  3) Put back");
             System.out.println("4) Close line  5) Log out");
 

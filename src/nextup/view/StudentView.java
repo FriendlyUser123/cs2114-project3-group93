@@ -131,7 +131,8 @@ public class StudentView implements LineObserver {
         }
 
         System.out.println("Helped: " + latest.getHelpedCount());
-        System.out.println("Average wait: " + latest.getAverageWaitMinutes()
+        System.out.println("Average wait: "
+                + String.format("%.1f", latest.getAverageWaitMinutes())
                 + " min");
     }
 }

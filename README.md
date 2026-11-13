@@ -6,8 +6,6 @@ Next Up is a terminal app for running an office-hours line on one shared laptop.
 
 The line is a **queue we wrote ourselves**: `LinkedDeque<T>`, a doubly linked deque with sentinel nodes. The app follows **MVC**. The model (`nextup.model`) knows nothing about the controller or views and tells them about changes only through the `LineObserver` interface.
 
-> **Team: see [TEAM-TODO.md](TEAM-TODO.md) for who does what.** Sections below marked **TODO(name)** are that person's to fill in.
-
 ![System diagram](docs/system-diagram.png)
 
 ## Project layout
@@ -43,7 +41,18 @@ The line is a **queue we wrote ourselves**: `LinkedDeque<T>`, a doubly linked de
 
 Run `src/nextup/controller/Runner.java` as a Java Application.
 
-**TODO(Al-Farouq):** once the views work, write the steps here. Include what to type for the TA PIN, joining, TA login, call next, finish, and close.
+It runs on one laptop, with the student screen as the home screen. A sample run of the whole MVP path:
+
+| Step | Type | You see |
+|---|---|---|
+| 1. The TA sets a PIN at startup | `1234` | `TA PIN set.` (a PIN that isn't 4 to 8 digits is asked for again) |
+| 2. A student joins | `1`, then a name (`Ana`) and a question (`Recursion?`) | `You're #1. Your ticket is 6916.` The line shows `1. Ana (0 min)`, names only. |
+| 3. The TA logs in | `4`, then `1234` | The TA screen, which shows each question: `1. Ana - Recursion? - 0 min` |
+| 4. Call the next student | `1` | `Now helping: Ana` |
+| 5. Finish with them | `2` | `Finished helping the current student.` and `Helped: 1` |
+| 6. Close the line | `4` | `The line is closed.`, then the final stats, and the program ends |
+
+Other choices: a student can leave with `2` and their ticket number. The TA can put the current student back at the front with `3`, or log out with `5`. Ending input (Ctrl+D) stops the program cleanly from either screen.
 
 ### From a terminal, without Eclipse
 
@@ -79,17 +88,25 @@ Each change lists what prompted it.
 | `LineEntry.minutesWaited` for the student being helped was not defined. | For position 0, it is the wait from join to being called, which stops growing once they're called. | That matches what `finishCurrent` adds to the stats, so the number on screen equals the number in the average. |
 | `HelpRequest` checked tickets "1000-9999." | Added public constants `HelpRequest.MIN_TICKET` and `MAX_TICKET`, and `OfficeHoursLine` uses them. | The range was written in two classes. Now it lives in one place. |
 
-**Model: the Queue.** **TODO(Nicolas):** did `LinkedDeque` match the D2 signatures? Note anything you changed and why, or say "built as specified."
+**The Queue, controller, and views**
 
-**Controller.** **TODO(Ha Minh):** anything that differed from the spec, and why.
+No public method signature changed from the D2 spec in `LinkedDeque`, `LineController`, `ActionResult`, `Runner`, or the views. What did change:
 
-**Views.** **TODO(Al-Farouq):** anything that differed from the spec, and why. One decision is already made in the skeleton, though the spec didn't settle it: `readMenuChoice` returns `-1` when input ends (Ctrl+D), so `run()` can stop cleanly.
+| What the D2 spec said | What we built | Why (what prompted it) |
+|---|---|---|
+| `LinkedDeque` is a doubly linked deque with sentinels. | Built as specified. It also rejects `null` in `enqueue` and `addToFront`, and `remove(null)` returns `false`. | `remove` finds an entry with `equals`, which a `null` entry can't call. Refusing `null` up front means the loop never meets one. |
+| The spec named only the controller's failure messages ("Wrong PIN", "Only a TA can do that.", "Enter your ticket number, like 4821."). | Success messages for every action ("TA PIN set.", "You left the line.", "Now helping: Ana", ...), plus "Enter a PIN with 4 to 8 digits." and "The TA PIN is already set." | `ActionResult` always carries a message, and the view prints it with no logic of its own, so every outcome needed a sentence. |
+| `ActionResult` fields | Made both fields `final`. | A result never changes after it's made, so nothing should be able to change it. |
+| The spec didn't say what the views do when input ends. | `readMenuChoice` returns `-1` and `readLine` returns `null`, and both views stop cleanly. | Writing `ViewTest` with a scripted `Scanner` showed that every script ends, and the views must not crash when it does. |
+| The views print "average wait" from `LineSnapshot`. | They print it with one decimal (`String.format("%.1f", ...)`). | The first full run printed `6.333333333333333E-4 min`, because the model keeps the average as an exact `double`. |
 
 ### Did the model really stand alone?
 
 Yes. `OfficeHoursLineTest` (19 tests) and `ModelTypesTest` (8 tests) run with no view, controller, or `Scanner`. `ModelDemo` drives the full MVP path the same way. `ModelBoundaryTest` checks the source and confirms that no model file imports `nextup.view` or `nextup.controller`, or prints. Nothing had to move across the model/view line to make the model run.
 
-The one dependency we felt was *inside* the model: `OfficeHoursLine` cannot run until `LinkedDeque` works, so its tests stayed red until the Queue was merged. **TODO(team):** confirm this is still true after the controller and views are merged. For example, did any view need something from the model that isn't in `LineSnapshot`?
+The one dependency we felt was *inside* the model: `OfficeHoursLine` cannot run until `LinkedDeque` works, so its tests stayed red until the Queue was merged.
+
+It was still true after the controller and views were merged. The views import only `LineObserver`, `LineSnapshot`, and `LineEntry` from the model, and never `OfficeHoursLine`, `LinkedDeque`, or `HelpRequest`. Everything the screens needed was already in the snapshot, and nothing was added to the model for them.
 
 ### What happened to our unknowns
 
@@ -105,19 +122,38 @@ These are the five unknowns from our Deliverable 1 scope:
 
 ### What doesn't work yet
 
-**TODO(Ha Minh, after the first full run on Wed Nov 11):** list any MVP features, bad-input cases from the D2 validation table, or tests that are missing or failing. If everything works, say so and list what was tested.
+**All 49 tests pass:** 7 `LinkedDequeTest`, 19 `OfficeHoursLineTest`, 8 `ModelTypesTest`, 1 `ModelBoundaryTest`, 8 `LineControllerTest`, 3 `ConsoleInputTest`, and 3 `ViewTest`.
+
+**What we ran in `Runner`, all with no crash:**
+- **The MVP path:** set a PIN, two students join, the TA logs in, calls next, puts back, calls again, finishes both, and closes.
+- **Every bad input from our D2 validation table:**
+  - a PIN that's too short;
+  - `abc`, `9`, or a blank line at a menu;
+  - a blank name, then "Try again?" and a retry;
+  - a name that is only tabs (counts as blank), and a name with a tab and a control character inside (both are removed);
+  - a name over 30 characters and a question over 120;
+  - joining twice;
+  - leaving with a blank ticket, `abc`, a huge number, or a ticket that isn't in line;
+  - a wrong or blank PIN;
+  - Call next with no one waiting, and Call next or Close while still helping someone ("Finish with Ana first.");
+  - Finish or Put back with no one being helped;
+  - the 51st student joining a full line;
+  - input ending at the PIN prompt, a student menu, or the TA menu.
+
+**Not working yet or missing:**
+- The first run printed the average wait as `6.333333333333333E-4 min`. **Fixed** (see the views row above).
+- Wait times use whole minutes, so a short demo shows `0 min` everywhere. This is correct, but the demo needs a waiting student and a few real minutes, or the tests' `FakeTimeSource`, to show a real number.
+- The menus are numbers only. Typing `join` instead of `1` is rejected the same way as `abc`.
 
 ## Next Steps
-
-*Draft by Aditya. **TODO(team):** check this on Thu Nov 12 and fix it to match what actually got built.*
 
 ### 1. Finish the MVP (in order)
 
 | # | Item | Owner |
 |---|---|---|
-| 1 | Fix anything the first full run found (see "What doesn't work yet") | Owner of the broken class |
-| 2 | Make sure every bad-input case in the D2 validation table survives in `Runner`, not only in tests | Ha Minh |
-| 3 | Clean up the screens: one blank line between redraws, and stats printed on close | Al-Farouq |
+| 1 | Turn the hand-run bad-input list above into one scripted test that runs the whole program, so it is checked on every run and not only by hand | Ha Minh |
+| 2 | Add `ViewTest` cases for Leave and Put back, which are only exercised by hand today | Al-Farouq |
+| 3 | Clean up the screens: show the student's own position after joining, and a header that says which screen (Student / TA) is showing | Al-Farouq |
 
 ### 2. Our change feature: wait-time estimates
 
@@ -141,7 +177,7 @@ If this holds, the feature touches the model and the views but **no controller c
 | Stretch goal (D1) | Decision |
 |---|---|
 | Wait-time estimates | **Committed.** It's our change feature. |
-| Live "Now Helping" Swing board | **TODO(team): decide.** A second view would show off the Observer design, but our unknown about running Swing and a `Scanner` together is still open. |
+| Live "Now Helping" Swing board | **Deferred until the change feature is done.** A second view would show off the Observer design, but our unknown about running Swing and a `Scanner` together is still open. |
 | Two TAs, one line | **Dropped.** It would rework `nowHelping` into a list and every TA command. That's too big alongside the change feature. |
 | Save and restore the line | **Dropped.** File I/O adds error cases that have nothing to do with the Queue. |
 
@@ -190,8 +226,8 @@ One row per class and test file. "How" means wrote, revised, reviewed, tested, o
 | `controller/Runner.java` | Ha Minh Nguyen | **TODO(Ha Minh)**. Skeleton generated by Aditya with Claude from our D2 spec. |
 | `controller/LineControllerTest.java` | Ha Minh Nguyen | **TODO(Ha Minh)**. Test names and cases laid out by Aditya with Claude. |
 | `view/ConsoleInput.java` | Al-Farouq Mohamed | **TODO(Al-Farouq)**. Skeleton generated by Aditya with Claude from our D2 spec. |
-| `view/StudentView.java` | Al-Farouq Mohamed | **TODO(Al-Farouq)**. Skeleton generated by Aditya with Claude from our D2 spec. |
-| `view/TaView.java` | Al-Farouq Mohamed | **TODO(Al-Farouq)**. Skeleton generated by Aditya with Claude from our D2 spec. |
+| `view/StudentView.java` | Al-Farouq Mohamed, Aditya Banerjee | **TODO(Al-Farouq)**. Skeleton generated by Aditya with Claude from our D2 spec. Aditya fixed the average-wait format after the first full run. |
+| `view/TaView.java` | Al-Farouq Mohamed, Aditya Banerjee | **TODO(Al-Farouq)**. Skeleton generated by Aditya with Claude from our D2 spec. Aditya fixed the average-wait format after the first full run. |
 | `view/ConsoleInputTest.java` | Al-Farouq Mohamed | **TODO(Al-Farouq)**. Test names and cases laid out by Aditya with Claude. |
 | `view/ViewTest.java` | Al-Farouq Mohamed | **TODO(Al-Farouq)**. Test names and cases laid out by Aditya with Claude. |
 
