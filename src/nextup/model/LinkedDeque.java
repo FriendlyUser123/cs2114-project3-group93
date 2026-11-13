@@ -4,18 +4,12 @@
 // As a Hokie, I will conduct myself with honor and integrity at all times.
 // I will not lie, cheat, or steal, nor will I accept the actions of those who
 // do.
-// -- TODO(Nicolas): Your Name (your PID)
-
+// -- Nicolas Marchese (nmarchese)
 // LLM Statement:
 //
-// TODO(Nicolas): keep the ONE paragraph below that is true, delete the other,
-// and fill in the blanks. Either way, leave the "Skeleton" line.
-//
-// During the preparation of this assignment, I, YOUR NAME, did not use any
-// generative AI tools for the method bodies.
-//
-// During the preparation of this assignment, I, YOUR NAME, used TOOL to
-// WHAT YOU USED IT FOR. After using this tool, I reviewed and edited the
+// During the preparation of this assignment, I used ChatGPT to generate code
+// and comments for the file.
+// After using this tool, I reviewed and edited the
 // content as needed to ensure its accuracy and take full responsibility for
 // the content in relation to grading. I understand that I am responsible for
 // being able to complete this work without the use of assistance.
@@ -30,28 +24,15 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
- * OWNER: Nicolas Marchese. The Queue we write ourselves (no library queue).
  *
- * A doubly linked deque with two SENTINEL nodes. head and tail are dummy
+ * A doubly linked deque with two sentinel nodes. head and tail are dummy
  * nodes that never hold data and are never removed. Real nodes live between
  * them:
- *
- * <pre>
- *   head &lt;-&gt; [a] &lt;-&gt; [b] &lt;-&gt; [c] &lt;-&gt; tail
- *   empty deque:  head &lt;-&gt; tail
- * </pre>
- *
- * Because the sentinels are always there, adding or removing never has a
- * special case for "first node" or "last node": every real node always has
- * a real prev and next. See Lab 10 (DLList) for the same idea.
- *
- * OfficeHoursLine (already written) uses: enqueue, dequeue, isEmpty, size,
- * addToFront, remove, toList. Its tests will pass once these work.
  *
  * Big-O, where n is the number of entries: everything is O(1) except
  * remove (O(n) to find, O(1) to unlink) and toList (O(n)).
  *
- * @author TODO(Nicolas): Nicolas Marchese (your PID)
+ * @author Nicolas Marchese (nmarchese)
  * @version 2026.11.08
  *
  * @param <T>
@@ -184,8 +165,8 @@ public class LinkedDeque<T> {
         if (entry == null) {
             return false;
         }
-        for (Node<T> current = head.next; current != tail;
-            current = current.next) {
+        for (Node<T> current = head.next; current != tail; current =
+            current.next) {
             if (current.data.equals(entry)) {
                 current.prev.next = current.next;
                 current.next.prev = current.prev;
@@ -205,13 +186,12 @@ public class LinkedDeque<T> {
      */
     public List<T> toList() {
         List<T> entries = new ArrayList<T>();
-        for (Node<T> current = head.next; current != tail;
-            current = current.next) {
+        for (Node<T> current = head.next; current != tail; current =
+            current.next) {
             entries.add(current.data);
         }
         return entries;
     }
-
 
     /**
      * One node of the deque. Sentinels have null data.
