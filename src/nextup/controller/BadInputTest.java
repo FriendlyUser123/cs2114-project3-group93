@@ -4,18 +4,13 @@
 // As a Hokie, I will conduct myself with honor and integrity at all times.
 // I will not lie, cheat, or steal, nor will I accept the actions of those who
 // do.
-// -- TODO(Ha Minh): Your Name (your PID)
+// -- Ha Minh Nguyen (PID to be confirmed before submission)
 
 // LLM Statement:
 //
-// TODO(Ha Minh): keep the ONE paragraph below that is true, delete the other,
-// and fill in the blanks. Either way, leave the "Skeleton" paragraph.
-//
-// During the preparation of this assignment, I, YOUR NAME, did not use any
-// generative AI tools for the test bodies.
-//
-// During the preparation of this assignment, I, YOUR NAME, used TOOL to
-// WHAT YOU USED IT FOR. After using this tool, I reviewed and edited the
+// During the preparation of this assignment, I, Ha Minh Nguyen, used Claude
+// Code (Anthropic) to write the test bodies and helpers from the cases listed
+// in each test's comment. After using this tool, I reviewed and edited the
 // content as needed to ensure its accuracy and take full responsibility for
 // the content in relation to grading. I understand that I am responsible for
 // being able to complete this work without the use of assistance.
@@ -26,8 +21,11 @@
 
 package nextup.controller;
 
+import java.util.List;
 import java.util.Random;
 import nextup.model.FakeTimeSource;
+import nextup.model.LineEntry;
+import nextup.model.LineSnapshot;
 import nextup.model.OfficeHoursLine;
 import nextup.model.RecordingObserver;
 
@@ -52,11 +50,10 @@ import nextup.model.RecordingObserver;
  * assertEquals(0, observer.getLast().getWaiting().size());
  * </pre>
  *
- * When every test passes, fill in the "Bad input → test" table in the
- * README (TODO(Ha Minh) there).
+ * The "Bad input → test" table in the README maps each case to its test.
  *
- * @author TODO(Ha Minh): Ha Minh Nguyen (your PID)
- * @version 2026.11.13
+ * @author Ha Minh Nguyen
+ * @version 2026.11.17
  */
 public class BadInputTest extends student.TestCase {
 
@@ -83,7 +80,13 @@ public class BadInputTest extends student.TestCase {
      * "Name can't be blank." / "Question can't be blank."; line unchanged.
      */
     public void testBlankNameOrQuestion() {
-        fail("TODO(Ha Minh, D4): blank name or question");
+        assertFailure(controller.join("", "Q"), "Name can't be blank.");
+        assertFailure(controller.join("   ", "Q"), "Name can't be blank.");
+        assertFailure(controller.join("Ana", ""),
+            "Question can't be blank.");
+        assertFailure(controller.join("Ana", "   "),
+            "Question can't be blank.");
+        assertEquals(0, waitingCount());
     }
 
 
@@ -92,7 +95,10 @@ public class BadInputTest extends student.TestCase {
      * with "You're already in line at #1."; still 1 waiting.
      */
     public void testJoinTwice() {
-        fail("TODO(Ha Minh, D4): joining twice");
+        assertTrue(controller.join("Ana", "Recursion?").isOk());
+        assertFailure(controller.join(" ana ", "Again?"),
+            "You're already in line at #1.");
+        assertEquals(1, waitingCount());
     }
 
 
@@ -101,7 +107,12 @@ public class BadInputTest extends student.TestCase {
      * finishCurrent and putBack fail "No one is being helped".
      */
     public void testEmptyLineTaCommands() {
-        fail("TODO(Ha Minh, D4): call next / finish / put back on empty");
+        assertTrue(controller.taLogin("1234").isOk());
+        assertFailure(controller.callNext(), "No one is waiting");
+        assertFailure(controller.finishCurrent(), "No one is being helped");
+        assertFailure(controller.putBack(), "No one is being helped");
+        assertNull(last().getNowHelping());
+        assertEquals(0, waitingCount());
     }
 
 
@@ -111,7 +122,14 @@ public class BadInputTest extends student.TestCase {
      * same ticket fails too.
      */
     public void testWrongOrUsedTicket() {
-        fail("TODO(Ha Minh, D4): wrong or used ticket");
+        int ana = joinAndGetTicket("Ana", "Recursion?");
+        assertFailure(controller.leave("57"), "No ticket #57 in line");
+        assertEquals(1, waitingCount());
+        assertTrue(controller.leave(String.valueOf(ana)).isOk());
+        assertEquals(0, waitingCount());
+        assertFailure(controller.leave(String.valueOf(ana)),
+            "No ticket #" + ana + " in line");
+        assertEquals(0, waitingCount());
     }
 
 
@@ -120,7 +138,13 @@ public class BadInputTest extends student.TestCase {
      * all fail with "Enter your ticket number, like 4821.".
      */
     public void testTicketNotANumber() {
-        fail("TODO(Ha Minh, D4): ticket text is not a number");
+        controller.join("Ana", "Recursion?");
+        String message = "Enter your ticket number, like 4821.";
+        assertFailure(controller.leave("abc"), message);
+        assertFailure(controller.leave(""), message);
+        assertFailure(controller.leave("4.2"), message);
+        assertFailure(controller.leave(null), message);
+        assertEquals(1, waitingCount());
     }
 
 
@@ -130,7 +154,16 @@ public class BadInputTest extends student.TestCase {
      * "Questions can be at most 120 characters.". Exactly 30 and 120 work.
      */
     public void testTooLong() {
-        fail("TODO(Ha Minh, D4): extremely long name or question");
+        String name30 = repeat('n', OfficeHoursLine.MAX_NAME);
+        String question120 = repeat('q', OfficeHoursLine.MAX_QUESTION);
+        assertFailure(controller.join(name30 + "n", "Q"),
+            "Names can be at most 30 characters.");
+        assertFailure(controller.join("Ana", question120 + "q"),
+            "Questions can be at most 120 characters.");
+        assertEquals(0, waitingCount());
+        assertTrue(controller.join(name30, "Q").isOk());
+        assertTrue(controller.join("Ana", question120).isOk());
+        assertEquals(2, waitingCount());
     }
 
 
@@ -139,7 +172,12 @@ public class BadInputTest extends student.TestCase {
      * "The line is full." and there are still 50 waiting.
      */
     public void testFloodTheLine() {
-        fail("TODO(Ha Minh, D4): flooding the line");
+        for (int i = 0; i < OfficeHoursLine.MAX_WAITING; i++) {
+            assertTrue(controller.join("Student" + i, "Q").isOk());
+        }
+        assertFailure(controller.join("OneTooMany", "Q"),
+            "The line is full.");
+        assertEquals(50, waitingCount());
     }
 
 
@@ -150,7 +188,27 @@ public class BadInputTest extends student.TestCase {
      * student's ticket.
      */
     public void testRemoveSomeoneElse() {
-        fail("TODO(Ha Minh, D4): removing someone else");
+        ActionResult anaJoin = controller.join("Ana", "Recursion?");
+        ActionResult benJoin = controller.join("Ben", "Loops?");
+        int ana = ticketFrom(anaJoin);
+        int ben = ticketFrom(benJoin);
+        assertFalse(anaJoin.getMessage().contains(String.valueOf(ben)));
+        assertFalse(benJoin.getMessage().contains(String.valueOf(ana)));
+        for (int guess : new int[] { ana + 1, ana - 1 }) {
+            ActionResult result = controller.leave(String.valueOf(guess));
+            if (guess == ben) {
+                assertTrue(result.isOk());
+            }
+            else {
+                assertFailure(result, "No ticket #" + guess + " in line");
+            }
+        }
+        List<LineEntry> waiting = last().getWaiting();
+        assertEquals("Ana", waiting.get(0).getName());
+        for (LineEntry entry : waiting) {
+            assertFalse(entry.getName().contains(String.valueOf(ana)));
+            assertFalse(entry.getQuestion().contains(String.valueOf(ana)));
+        }
     }
 
 
@@ -160,7 +218,18 @@ public class BadInputTest extends student.TestCase {
      * taLogin("9999") fails "Wrong PIN" and TA mode stays off.
      */
     public void testTaCommandsWhileLoggedOut() {
-        fail("TODO(Ha Minh, D4): TA commands without logging in");
+        controller.join("Ana", "Recursion?");
+        String message = "Only a TA can do that.";
+        assertFailure(controller.callNext(), message);
+        assertFailure(controller.finishCurrent(), message);
+        assertFailure(controller.putBack(), message);
+        assertFailure(controller.closeLine(), message);
+        assertFailure(controller.taLogin("9999"), "Wrong PIN");
+        assertFalse(controller.isTaMode());
+        assertFailure(controller.callNext(), message);
+        assertEquals(1, waitingCount());
+        assertNull(last().getNowHelping());
+        assertFalse(last().isClosed());
     }
 
 
@@ -170,7 +239,10 @@ public class BadInputTest extends student.TestCase {
      * characters ("\t\n") counts as blank.
      */
     public void testControlCharacters() {
-        fail("TODO(Ha Minh, D4): newlines, tabs, control characters");
+        assertTrue(controller.join("A\tn\na", "Q").isOk());
+        assertEquals("Ana", last().getWaiting().get(0).getName());
+        assertFailure(controller.join("\t\n", "Q"), "Name can't be blank.");
+        assertEquals(1, waitingCount());
     }
 
 
@@ -181,7 +253,20 @@ public class BadInputTest extends student.TestCase {
      * is closed.".
      */
     public void testWrongOrderTaCommands() {
-        fail("TODO(Ha Minh, D4): call next / close in the wrong state");
+        controller.join("Ana", "Recursion?");
+        controller.join("Ben", "Loops?");
+        assertTrue(controller.taLogin("1234").isOk());
+        assertTrue(controller.callNext().isOk());
+        assertFailure(controller.callNext(), "Finish with Ana first.");
+        assertFailure(controller.closeLine(), "Finish with Ana first.");
+        assertEquals("Ana", last().getNowHelping().getName());
+        assertEquals(1, waitingCount());
+        assertTrue(controller.finishCurrent().isOk());
+        assertTrue(controller.closeLine().isOk());
+        assertTrue(controller.taLogin("1234").isOk());
+        assertFailure(controller.closeLine(), "The line is already closed.");
+        assertFailure(controller.join("Cal", "Late?"), "The line is closed.");
+        assertTrue(last().isClosed());
     }
 
 
@@ -191,7 +276,16 @@ public class BadInputTest extends student.TestCase {
      * already set.".
      */
     public void testBadPin() {
-        fail("TODO(Ha Minh, D4): bad PIN at startup");
+        LineController fresh = new LineController(model);
+        String message = "Enter a PIN with 4 to 8 digits.";
+        assertFailure(fresh.setTaPin("12"), message);
+        assertFailure(fresh.setTaPin("abcd"), message);
+        assertFailure(fresh.setTaPin("123456789"), message);
+        assertFailure(fresh.setTaPin(null), message);
+        assertFailure(fresh.taLogin("12"), "Wrong PIN");
+        assertTrue(fresh.setTaPin("1234").isOk());
+        assertFailure(fresh.setTaPin("5678"), "The TA PIN is already set.");
+        assertTrue(fresh.taLogin("1234").isOk());
     }
 
 
@@ -202,6 +296,101 @@ public class BadInputTest extends student.TestCase {
      * observer.getLast().getWaiting().get(0).getEstimatedWaitMinutes().
      */
     public void testEstimateWithNobodyHelped() {
-        fail("TODO(Ha Minh, D4): estimate before anyone is helped");
+        controller.join("Ana", "Recursion?");
+        controller.join("Ben", "Loops?");
+        clock.advanceMinutes(5);
+        controller.join("Cal", "Arrays?");
+        assertEquals(3, waitingCount());
+        for (LineEntry entry : last().getWaiting()) {
+            assertEquals(-1, entry.getEstimatedWaitMinutes());
+        }
+        assertEquals(0, last().getHelpedCount());
+    }
+
+
+    // ----------------------------------------------------------------------
+    // Helpers
+
+    /**
+     * Asserts that an action failed with exactly this message.
+     *
+     * @param result
+     *            what the controller returned
+     * @param message
+     *            the expected failure message
+     */
+    private void assertFailure(ActionResult result, String message) {
+        assertFalse(result.isOk());
+        assertEquals(message, result.getMessage());
+    }
+
+
+    /**
+     * Returns the snapshot the model sent last.
+     *
+     * @return the observer's latest snapshot
+     */
+    private LineSnapshot last() {
+        return observer.getLast();
+    }
+
+
+    /**
+     * Returns how many students are waiting in the latest snapshot.
+     *
+     * @return the waiting count
+     */
+    private int waitingCount() {
+        return last().getWaiting().size();
+    }
+
+
+    /**
+     * Joins a student and returns their ticket.
+     *
+     * @param name
+     *            the student's name
+     * @param question
+     *            the student's question
+     * @return the ticket from the join message
+     */
+    private int joinAndGetTicket(String name, String question) {
+        ActionResult result = controller.join(name, question);
+        assertTrue(result.isOk());
+        return ticketFrom(result);
+    }
+
+
+    /**
+     * Reads the ticket out of "You're #1. Your ticket is 6916.".
+     *
+     * @param result
+     *            a successful join result
+     * @return the ticket number
+     */
+    private int ticketFrom(ActionResult result) {
+        String message = result.getMessage();
+        String marker = "ticket is ";
+        int start = message.indexOf(marker) + marker.length();
+        return Integer.parseInt(
+            message.substring(start, message.length() - 1));
+    }
+
+
+    /**
+     * Builds a string of one character repeated.
+     *
+     * @param c
+     *            the character
+     * @param count
+     *            how many times
+     * @return the string
+     */
+    private String repeat(char c, int count) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < count; i++) {
+            builder.append(c);
+        }
+        return builder.toString();
     }
 }

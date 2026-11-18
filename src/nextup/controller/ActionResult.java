@@ -8,14 +8,9 @@
 
 // LLM Statement:
 //
-// TODO(Ha Minh): keep the ONE paragraph below that is true, delete the other,
-// and fill in the blanks. Either way, leave the "Skeleton" paragraph.
-//
-// During the preparation of this assignment, I, YOUR NAME, did not use any
-// generative AI tools for the method bodies.
-//
-// During the preparation of this assignment, I, YOUR NAME, used TOOL to
-// WHAT YOU USED IT FOR. After using this tool, I reviewed and edited the
+// During the preparation of this assignment, I, Ha Minh Nguyen, used ChatGPT
+// (OpenAI) to help write the method bodies from the TODO steps in the
+// skeleton. After using this tool, I reviewed and edited the
 // content as needed to ensure its accuracy and take full responsibility for
 // the content in relation to grading. I understand that I am responsible for
 // being able to complete this work without the use of assistance.

@@ -90,13 +90,15 @@ java -Djava.security.manager=allow -cp out:student.jar org.junit.runner.JUnitCor
 | `LineEntry` | Yes: field `estimatedWaitMinutes`, constructor parameter, getter `getEstimatedWaitMinutes()` | Exactly those three. The constructor also rejects estimates below `-1` | ✅ |
 | `StudentView`, `TaView` | Yes: print "about N min" or the no-estimate text | Both views display the estimate or the first-session message in `update`. The student screen displays names and the TA screen also displays questions. | ✅ |
 | `LineSnapshot` | No | Unchanged. The estimate rides along inside each `LineEntry` | ✅ |
-| `LineController`, `ActionResult` | No | **TODO(Ha Minh):** confirm with `git diff ca5c846 -- src/nextup/controller/LineController.java src/nextup/controller/ActionResult.java` (no output = unchanged) | |
-| `LinkedDeque`, `HelpRequest`, `LineObserver`, `TimeSource`, `ConsoleInput`, `Runner` | No | Unchanged so far. **TODO(team):** re-check after the views are merged | ✅ so far |
+| `LineController`, `ActionResult` | No | No code changed. `git diff ca5c846 -- src/nextup/controller/LineController.java src/nextup/controller/ActionResult.java` shows only the filled-in LLM Statement in the header comment. The new `BadInputTest` drives the controller as it was, with no new method | ✅ |
+| `LinkedDeque`, `HelpRequest`, `LineObserver`, `TimeSource`, `ConsoleInput`, `Runner` | No | Unchanged after the views were merged. `git diff ca5c846` on all six files shows no code change (only `Runner`'s header comment, where the LLM Statement was filled in) | ✅ |
 
 **Not in the prediction (what surprised us):**
 - **`ModelTypesTest`:** adding one constructor parameter to `LineEntry` meant editing all **nine** existing `new LineEntry(...)` calls in this test. The prediction listed the new test cases but not this ripple.
 - **`ModelDemo`:** we changed it to print the estimate, so the "model alone" demo shows the feature. It isn't part of the app, so the prediction didn't list it either way.
 - **`StudentView`, `TaView`:** we expected to change only what the views displayed, but we also changed when they displayed it. Removing the cached snapshots meant rendering directly in `update()` and removing the separate Show the line option. This kept the views from storing a copy of the model's state.
+- **`ViewTest` scripts:** the views moved TA login from student option `4` to `3` when Show the line was removed. Every scripted test that logged in as TA had to change its `4` to `3`. That is a view change rippling into view tests only, but the prediction didn't list it.
+- **No surprise in the controller:** all 13 `BadInputTest` cases passed against the D3 controller on the first run. The estimate added no new way for input to go wrong that the controller had to catch.
 
 ### Did the change cross the model/view line?
 
@@ -114,7 +116,14 @@ The estimate is computed entirely in the model, in the private `estimateMinutes`
 
 ### What doesn't work yet
 
-**TODO(team, Thu Nov 19):** after everything is merged, run all tests and walk the demo below, then list anything missing or failing. If everything works, say so and list what was tested.
+**All 70 tests pass (run Nov 17, with everything merged):** 8 `LinkedDequeTest`, 24 `OfficeHoursLineTest`, 8 `ModelTypesTest`, 1 `ModelBoundaryTest`, 8 `LineControllerTest`, 13 `BadInputTest`, 3 `ConsoleInputTest`, and 5 `ViewTest`.
+
+**What we ran in `Runner`, all with no crash:**
+- **The demo path:** set PIN `1234`; Ana and Ben join; Ben sees "estimate after first student"; the TA logs in, calls Ana, and finishes her; Ben then sees "about 1 more"; the TA calls and finishes Ben, then closes the line, and the final stats print.
+- **The demo's bad inputs:** `abc` at the menu, a blank name, a wrong PIN, and Call next while helping. Each prints its message ("Enter a number 1 to 3.", "Name can't be blank.", "Wrong PIN", "Finish with Ben first.").
+
+**Not working yet or missing:** nothing fails. One limit to know for the demo:
+- Wait times and estimates are whole minutes, so a quick hand run shows `0 min` waits and "about 1 more". The tests use `FakeTimeSource` to check real numbers (`testEstimateAfterTwoSessions`).
 
 ### What design change would make the next feature cheaper
 
@@ -127,7 +136,7 @@ One design change that would make future features cheaper is using the Builder p
 | # | Item | Owner |
 |---|---|---|
 | 1 | Anything still open from "What doesn't work yet" | Owner of that class |
-| 2 | **TODO(team):** the stretch goal we commit to below, if any | |
+| 2 | No stretch goal: we dropped the Swing board (below), so D5 is polish only | |
 | 3 | Final README pass: How to run, Reflection, attribution | Aditya |
 | 4 | Rehearse the 3-minute demo below twice, timed, with a different person driving each time | Everyone |
 
@@ -136,7 +145,7 @@ One design change that would make future features cheaper is using the Builder p
 | Stretch goal (D1) | Decision |
 |---|---|
 | Wait-time estimates | **Done.** It was our D4 change feature. |
-| Live "Now Helping" Swing board | **TODO(team): commit or drop.** It would be a third `LineObserver` with its own runner, so no model or controller change. Our open unknown, running Swing beside a `Scanner`, goes away if it runs as its own program. |
+| Live "Now Helping" Swing board | **Dropped.** It would be a third `LineObserver` with its own runner, so no model or controller change. But it is a new view with no tests, and our time before the final build goes to rehearsing the demo and walking every class. |
 | Two TAs, one line | **Dropped** (D3). Too big alongside the change feature. |
 | Save and restore the line | **Dropped** (D3). File I/O adds error cases that have nothing to do with the Queue. |
 
@@ -144,11 +153,11 @@ One design change that would make future features cheaper is using the Builder p
 
 | Time | What we show | Who drives |
 |---|---|---|
-| 0:00–0:30 | **The model alone:** run `ModelDemo` and point at `1.Cal(7m, est 4m) 2.Dee(0m, est 8m)`. That's the estimate, with no view. | **TODO(team)** |
-| 0:30–1:00 | **Tests:** run all of `src` as JUnit and show it all green. Point at `testEstimateAfterTwoSessions`, `testInterleavedOrder`, and `BadInputTest`. | |
-| 1:00–2:15 | **The real program:** run `Runner`. Set PIN `1234`; Ana and Ben join; Ben sees "estimate after first student". TA logs in, calls Ana, finishes her a few seconds later; Ben now sees "about 1 more". | |
-| 2:15–2:45 | **Bad input:** `abc` at the menu, a blank name, a wrong PIN, Call next while helping. Each prints its message and nothing crashes. | |
-| 2:45–3:00 | **Close the line:** the final stats, and one sentence on the MVC split: the views only call the controller, and the model tells them about changes through `LineObserver`. | |
+| 0:00–0:30 | **The model alone:** run `ModelDemo` and point at `1.Cal(7m, est 4m) 2.Dee(0m, est 8m)`. That's the estimate, with no view. | Aditya |
+| 0:30–1:00 | **Tests:** run all of `src` as JUnit and show it all green. Point at `testEstimateAfterTwoSessions`, `testInterleavedOrder`, and `BadInputTest`. | Nicolas |
+| 1:00–2:15 | **The real program:** run `Runner`. Set PIN `1234`; Ana and Ben join; Ben sees "estimate after first student". TA logs in, calls Ana, finishes her a few seconds later; Ben now sees "about 1 more". | Al-Farouq |
+| 2:15–2:45 | **Bad input:** `abc` at the menu, a blank name, a wrong PIN, Call next while helping. Each prints its message and nothing crashes. | Ha Minh |
+| 2:45–3:00 | **Close the line:** the final stats, and one sentence on the MVC split: the views only call the controller, and the model tells them about changes through `LineObserver`. | Ha Minh |
 
 ### Who does what
 
@@ -161,7 +170,7 @@ One design change that would make future features cheaper is using the Builder p
 
 ### Bad input → test
 
-**TODO(Ha Minh):** fill in the last column once `BadInputTest` passes.
+Every test below passes. Each `BadInputTest` case runs through the controller with the real model, the same path `Runner` uses.
 
 | Bad input (from our D2 validation table, plus D4) | Test |
 |---|---|
@@ -207,7 +216,7 @@ One row per class and test file. "How" means wrote, revised, reviewed, tested, o
 | `controller/LineController.java` | Ha Minh Nguyen | Written by Ha Minh with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. |
 | `controller/Runner.java` | Ha Minh Nguyen | Written by Ha Minh with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. |
 | `controller/LineControllerTest.java` | Ha Minh Nguyen | Written by Ha Minh with GenAI (ChatGPT). Test names and cases laid out by Aditya with Claude. |
-| `controller/BadInputTest.java` | Ha Minh Nguyen | **TODO(Ha Minh)**: how you wrote it. Test names and cases laid out by Aditya with Claude from our D2 validation table. |
+| `controller/BadInputTest.java` | Ha Minh Nguyen | Test bodies and helpers written with GenAI (Claude Code) for Ha Minh, from the cases in each test's comment; reviewed and run by Ha Minh. Test names and cases laid out by Aditya with Claude from our D2 validation table. |
 | `view/ConsoleInput.java` | Al-Farouq Mohamed, Aditya Banerjee | Written by Al-Farouq with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. Aditya fixed the prompt order in `readLine` after a hand run. |
 | `view/StudentView.java` | Al-Farouq Mohamed, Aditya Banerjee | Written by Al-Farouq with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. Aditya fixed the average-wait format after the first full run. D4: ChatGPT drafted the estimate display and observer-based redraw for Al-Farouq’s assigned view work. |
 | `view/TaView.java` | Al-Farouq Mohamed, Aditya Banerjee | Written by Al-Farouq with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. Aditya fixed the average-wait format after the first full run. D4: ChatGPT drafted the estimate display and observer-based redraw for Al-Farouq’s assigned view work. |
@@ -218,7 +227,7 @@ One row per class and test file. "How" means wrote, revised, reviewed, tested, o
 
 Aditya used Claude Code (Anthropic) to set up this repository. It was given our D2 specification and test plan and the D3 instructions and rubric. It generated the skeleton of every class (packages, signatures, Javadoc, and TODO steps) and the test method names and cases for each test file. It then wrote the line half of the model: `OfficeHoursLine`, the small model types, the two test helpers, `ModelDemo`, and the model tests. Aditya reviewed that code and ran the tests; all 28 pass.
 
-**D4:** Aditya used Claude Code again to add the wait-time estimate to the model (`OfficeHoursLine`, `LineEntry`), its tests, and the `ModelDemo` output, following our D3 prediction table. It also laid out the D4 test stubs and TODO steps for the others (`testInterleavedOrder`, the two new `ViewTest` cases, and `BadInputTest`) from the D4 rubric and our D2 validation table. Aditya reviewed the estimate math by hand against the test cases (4- and 6-minute sessions give 5, 10, 15) and ran every test. **Al-Farouq’s D4 work:** OpenAI ChatGPT drafted the Java changes for both views, wrote and ran the view tests with JUnit, and drafted the corresponding README entries. **Nicolas's D4 work:** ChatGPT generated the interleaved queue test from the provided test cases and drafted the corresponding README reflection and attribution entries. **TODO(Ha Minh):** one sentence on how you did your D4 part.
+**D4:** Aditya used Claude Code again to add the wait-time estimate to the model (`OfficeHoursLine`, `LineEntry`), its tests, and the `ModelDemo` output, following our D3 prediction table. It also laid out the D4 test stubs and TODO steps for the others (`testInterleavedOrder`, the two new `ViewTest` cases, and `BadInputTest`) from the D4 rubric and our D2 validation table. Aditya reviewed the estimate math by hand against the test cases (4- and 6-minute sessions give 5, 10, 15) and ran every test. **Al-Farouq’s D4 work:** OpenAI ChatGPT drafted the Java changes for both views, wrote and ran the view tests with JUnit, and drafted the corresponding README entries. **Nicolas's D4 work:** ChatGPT generated the interleaved queue test from the provided test cases and drafted the corresponding README reflection and attribution entries. **Ha Minh's D4 work:** Claude Code (Anthropic) wrote the 13 `BadInputTest` bodies from the cases in each test's comment, ran the full test suite and the `git diff` check that shows the controller is unchanged, and filled in the matching README rows.
 
 Following the D3 tip, Aditya described our classes to Claude and asked which ones wait-time estimates would force us to edit. Its list was `OfficeHoursLine`, `LineEntry`, and both views, with no controller changes. That list stays on the correct sides of our model/view line, so we kept the feature. Claude's list is the prediction table in Next Steps.
 

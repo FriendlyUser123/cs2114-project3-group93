@@ -21,7 +21,7 @@
 
 **What you can use:** `entry.getEstimatedWaitMinutes()` on any `LineEntry` in a snapshot.
 
-## 🔲 Nicolas Marchese: the interleaved queue test and the Reflection
+## ✅ Nicolas Marchese: the interleaved queue test and the Reflection. DONE
 
 | File | What to do |
 |---|---|
@@ -32,7 +32,7 @@
 
 **Target: Mon Nov 16** for the test, **Wed Nov 18** for the README.
 
-## 🔲 Ha Minh Nguyen: every bad input gets a test
+## ✅ Ha Minh Nguyen: every bad input gets a test. DONE (13 tests green, controller unchanged)
 
 | File | What to do |
 |---|---|
@@ -44,7 +44,7 @@
 
 **Target: Tue Nov 17.**
 
-## 🔲 Al-Farouq Mohamed: the views show the estimate and keep no copy
+## ✅ Al-Farouq Mohamed: the views show the estimate and keep no copy. DONE (merged in PR #2)
 
 | File | What to do |
 |---|---|
