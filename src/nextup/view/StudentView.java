@@ -84,7 +84,7 @@ public class StudentView implements LineObserver {
         if (estimate == -1) {
             return "estimate after first student";
         }
-        return "about " + estimate + " more";
+        return "about " + estimate + " min left";
     }
 
     /**

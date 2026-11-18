@@ -55,7 +55,7 @@ It runs on one laptop, with the student screen as the home screen. A sample run 
 | 5. Finish with them | `2` | `Finished helping the current student.` and `Helped: 1` |
 | 6. Close the line | `4` | `The line is closed.`, then the final stats, and the program ends |
 
-The active screen redraws the queue when the line changes. Before the first finished help session it shows “estimate after first student.” After a session, it shows an estimate such as “about 5 more.” A student can leave with `2` and their ticket number. The TA can put the current student back at the front with `3`, or log out with `5`. Ending input (Ctrl+D) stops the program cleanly from either screen.
+The active screen redraws the queue when the line changes. Before the first finished help session it shows “estimate after first student.” After a session, it shows an estimate such as “about 5 min left.” A student can leave with `2` and their ticket number. The TA can put the current student back at the front with `3`, or log out with `5`. Ending input (Ctrl+D) stops the program cleanly from either screen.
 
 **The Swing board (D5 stretch goal):** `Runner` also opens a "Next Up" window for the room. It shows who is being helped, who is waiting with their estimates, and the totals, and it updates on every change. All typing stays in the terminal. Questions and tickets never appear on it. After the line closes, the program ends when you close the window. Without a display, `Runner` skips the board and the terminal works as usual.
 
@@ -123,11 +123,11 @@ The estimate is computed entirely in the model, in the private `estimateMinutes`
 **All 76 tests pass (run Nov 18, with everything merged):** 8 `LinkedDequeTest`, 24 `OfficeHoursLineTest`, 8 `ModelTypesTest`, 1 `ModelBoundaryTest`, 8 `LineControllerTest`, 13 `BadInputTest`, 3 `ConsoleInputTest`, 5 `ViewTest`, and 6 `BoardViewTest`.
 
 **What we ran in `Runner`, all with no crash:**
-- **The demo path:** set PIN `1234`; Ana and Ben join; Ben sees "estimate after first student"; the TA logs in, calls Ana, and finishes her; Ben then sees "about 1 more"; the TA calls and finishes Ben, then closes the line, and the final stats print.
+- **The demo path:** set PIN `1234`; Ana and Ben join; Ben sees "estimate after first student"; the TA logs in, calls Ana, and finishes her; Ben then sees "about 1 min left"; the TA calls and finishes Ben, then closes the line, and the final stats print.
 - **The demo's bad inputs:** `abc` at the menu, a blank name, a wrong PIN, and Call next while helping. Each prints its message ("Enter a number 1 to 3.", "Name can't be blank.", "Wrong PIN", "Finish with Ben first.").
 
 **Not working yet or missing:** nothing fails. One limit to know for the demo:
-- Wait times and estimates are whole minutes, so a quick hand run shows `0 min` waits and "about 1 more". The tests use `FakeTimeSource` to check real numbers (`testEstimateAfterTwoSessions`).
+- Wait times and estimates are whole minutes, so a quick hand run shows `0 min` waits and "about 1 min left". The tests use `FakeTimeSource` to check real numbers (`testEstimateAfterTwoSessions`).
 
 ### What design change would make the next feature cheaper
 
@@ -159,7 +159,7 @@ One design change that would make future features cheaper is using the Builder p
 |---|---|---|
 | 0:00–0:30 | **The model alone:** run `ModelDemo` and point at `1.Cal(7m, est 4m) 2.Dee(0m, est 8m)`. That's the estimate, with no view. | Aditya |
 | 0:30–1:00 | **Tests:** run all of `src` as JUnit and show it all green. Point at `testEstimateAfterTwoSessions`, `testInterleavedOrder`, and `BadInputTest`. | Nicolas |
-| 1:00–2:15 | **The real program:** run `Runner`. Set PIN `1234`; Ana and Ben join; Ben sees "estimate after first student". TA logs in, calls Ana, finishes her a few seconds later; Ben now shows "about 1 more". The Swing board updates beside the terminal at each step. | Al-Farouq |
+| 1:00–2:15 | **The real program:** run `Runner`. Set PIN `1234`; Ana and Ben join; Ben sees "estimate after first student". TA logs in, calls Ana, finishes her a few seconds later; Ben now shows "about 1 min left". The Swing board updates beside the terminal at each step. | Al-Farouq |
 | 2:15–2:45 | **Bad input:** `abc` at the menu, a blank name, a wrong PIN, Call next while helping. Each prints its message and nothing crashes. | Ha Minh |
 | 2:45–3:00 | **Close the line:** the final stats, and one sentence on the MVC split: the views only call the controller, and the model tells them about changes through `LineObserver`. | Ha Minh |
 
@@ -223,7 +223,7 @@ One row per class and test file. "How" means wrote, revised, reviewed, tested, o
 | `controller/LineControllerTest.java` | Ha Minh Nguyen | Written by Ha Minh with GenAI (ChatGPT). Test names and cases laid out by Aditya with Claude. |
 | `controller/BadInputTest.java` | Ha Minh Nguyen | Test bodies and helpers written with GenAI (Claude Code) for Ha Minh, from the cases in each test's comment; reviewed and run by Ha Minh. Test names and cases laid out by Aditya with Claude from our D2 validation table. |
 | `view/ConsoleInput.java` | Al-Farouq Mohamed, Aditya Banerjee | Written by Al-Farouq with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. Aditya fixed the prompt order in `readLine` after a hand run and, with Claude, filled in the header disclosure and `@author` line for D4. |
-| `view/StudentView.java` | Al-Farouq Mohamed, Aditya Banerjee | Written by Al-Farouq with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. Aditya fixed the average-wait format after the first full run. D4: ChatGPT drafted the estimate display and observer-based redraw for Al-Farouq’s assigned view work. |
+| `view/StudentView.java` | Al-Farouq Mohamed, Aditya Banerjee | Written by Al-Farouq with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. Aditya fixed the average-wait format after the first full run. D4: ChatGPT drafted the estimate display and observer-based redraw for Al-Farouq’s assigned view work. Aditya changed the estimate label to "about N min left" so the unit is clear. |
 | `view/TaView.java` | Al-Farouq Mohamed, Aditya Banerjee | Written by Al-Farouq with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. Aditya fixed the average-wait format after the first full run. D4: ChatGPT drafted the estimate display and observer-based redraw for Al-Farouq’s assigned view work. |
 | `view/ConsoleInputTest.java` | Al-Farouq Mohamed, Aditya Banerjee | Written by Al-Farouq with GenAI (ChatGPT). Test names and cases laid out by Aditya with Claude. Aditya added the header disclosure and class comment with Claude for D4. |
 | `view/ViewTest.java` | Al-Farouq Mohamed | Written by Al-Farouq with GenAI (ChatGPT). Test names and cases laid out by Aditya with Claude. D4: ChatGPT drafted the deterministic estimate test and the scripted Leave and Put back test from the cases Aditya laid out with Claude. |

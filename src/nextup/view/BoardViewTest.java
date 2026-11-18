@@ -122,7 +122,7 @@ public class BoardViewTest {
         line.finishCurrent();
         line.callNext();
         assertEquals("Cal", BoardView.helpingText(latest()));
-        assertEquals("1. Dee (about 5 more)\n2. Eve (about 10 more)",
+        assertEquals("1. Dee (about 5 min left)\n2. Eve (about 10 min left)",
             BoardView.waitingText(latest()));
         assertTrue(BoardView.statsText(latest()).startsWith(
             "Waiting: 2    Helped: 2"));

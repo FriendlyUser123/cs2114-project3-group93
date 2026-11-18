@@ -92,9 +92,9 @@ public class ViewTest {
         assertTrue(output.contains(
                 "1. Ben - Generics? - 0 min (estimate after first student)"));
         assertTrue(output.contains(
-            "1. Ben - Generics? - 5 min (about 5 more)"));
-        assertTrue(output.contains("1. Ben (5 min, about 5 more)"));
-        assertTrue(output.contains("2. Cal (0 min, about 10 more)"));
+            "1. Ben - Generics? - 5 min (about 5 min left)"));
+        assertTrue(output.contains("1. Ben (5 min, about 5 min left)"));
+        assertTrue(output.contains("2. Cal (0 min, about 10 min left)"));
     }
 
     @Test
