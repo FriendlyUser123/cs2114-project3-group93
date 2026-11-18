@@ -136,7 +136,7 @@ One design change that would make future features cheaper is using the Builder p
 | # | Item | Owner |
 |---|---|---|
 | 1 | Nothing is failing now. Fix anything the D4 grading session turns up | Owner of that class |
-| 2 | No stretch goal: we dropped the Swing board (below), so D5 is polish only | |
+| 2 | Stretch goal: build the live "Now Helping" Swing board and its tests (plan below) | Aditya |
 | 3 | Final README pass: How to run, Reflection, attribution | Aditya |
 | 4 | Rehearse the 3-minute demo below twice, timed, with a different person driving each time | Everyone |
 
@@ -145,7 +145,7 @@ One design change that would make future features cheaper is using the Builder p
 | Stretch goal (D1) | Decision |
 |---|---|
 | Wait-time estimates | **Done.** It was our D4 change feature. |
-| Live "Now Helping" Swing board | **Dropped.** It would be a third `LineObserver` with its own runner, so no model or controller change. But it is a new view with no tests, and our time before the final build goes to rehearsing the demo and walking every class. |
+| Live "Now Helping" Swing board | **Committed for D5. Owner: Aditya.** A new `BoardView` will be a third `LineObserver`, showing who is being helped and who is waiting. It runs in the same program as the terminal views, so it gets the same updates, and `Runner` needs only the code that creates it and adds it as an observer. No model or controller change. The terminal keeps the main thread; `update` hands each immutable `LineSnapshot` to Swing with `SwingUtilities.invokeLater`, and the board stores no copy of it. Tests will check the text built from a snapshot (nobody helped, someone helped, empty line, closed line, with and without estimates), so they run without opening a window. |
 | Two TAs, one line | **Dropped** (D3). Too big alongside the change feature. |
 | Save and restore the line | **Dropped** (D3). File I/O adds error cases that have nothing to do with the Queue. |
 
@@ -167,6 +167,7 @@ One design change that would make future features cheaper is using the Builder p
 | Views: show the estimate, keep no copy of model state, `ViewTest` cases | Al-Farouq (**done**) |
 | `testInterleavedOrder`, Reflection: "what would make the next feature cheaper" and "what surprised us" | Nicolas (**done**) |
 | `BadInputTest`, the "Bad input → test" table, confirm the controller is unchanged | Ha Minh (**done**) |
+| D5 stretch goal: Swing `BoardView`, its `Runner` wiring, and its tests | Aditya |
 
 ### Bad input → test
 
