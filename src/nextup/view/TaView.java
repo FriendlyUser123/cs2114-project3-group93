@@ -1,29 +1,18 @@
+// CS 2114 Project 3, Deliverable 4 | Al-Farouq Mohamed
+// GenAI disclosure (D4): ChatGPT drafted the D4 TA observer rendering and estimate display.
 
 package nextup.view;
 
 import nextup.controller.ActionResult;
 import nextup.controller.LineController;
+import nextup.model.LineEntry;
 import nextup.model.LineObserver;
 import nextup.model.LineSnapshot;
-import nextup.model.LineEntry;
 
 public class TaView implements LineObserver {
 
     private final LineController controller;
     private final ConsoleInput input;
-    // TODO(Al-Farouq, D4): two changes to this class (see TEAM-TODO.md).
-    //
-    // 1. Show the wait-time estimate next to each waiting name:
-    //    entry.getEstimatedWaitMinutes() is the minutes, or -1 when nobody
-    //    has been helped yet. Print "1. Ben - Generics? - 3 min (about
-    //    5 more)" or "... (estimate after first student)".
-    //
-    // 2. D4 Exceeds: "the view keeps no copy of model state". Remove the
-    //    `latest` field and draw inside update(snapshot), but only when
-    //    controller.isTaMode() is true (otherwise the student screen is
-    //    showing). run() then just reads the menu choice and prints each
-    //    ActionResult; the model's update draws the line for you.
-    private LineSnapshot latest;
 
     /**
      * Creates the TA view.
@@ -36,19 +25,40 @@ public class TaView implements LineObserver {
     public TaView(LineController controller, ConsoleInput input) {
         this.controller = controller;
         this.input = input;
-        latest = null;
     }
 
 
     /**
-     * Stores the newest snapshot. Called by the model.
+     * Renders the TA screen while a TA has the keyboard.
      *
      * @param snapshot
      *            the new line
      */
     @Override
     public void update(LineSnapshot snapshot) {
-        latest = snapshot;
+        if (!controller.isTaMode() || snapshot.isClosed()) {
+            return;
+        }
+
+        System.out.println("\nTA line");
+        LineEntry current = snapshot.getNowHelping();
+        if (current != null) {
+            System.out.println("Now helping: " + current.getName()
+                    + " (" + current.getQuestion() + ") - waited "
+                    + current.getMinutesWaited() + " min");
+        }
+
+        for (LineEntry entry : snapshot.getWaiting()) {
+            System.out.println(entry.getPosition() + ". " + entry.getName()
+                    + " - " + entry.getQuestion() + " - "
+                    + entry.getMinutesWaited() + " min ("
+                    + StudentView.estimateText(entry) + ")");
+        }
+
+        System.out.println("Helped: " + snapshot.getHelpedCount()
+                + ", average wait "
+                + String.format("%.1f", snapshot.getAverageWaitMinutes())
+                + " min");
     }
 
 
@@ -80,25 +90,7 @@ public class TaView implements LineObserver {
      */
     public void run() {
         while (controller.isTaMode()) {
-            System.out.println();
-
-            LineEntry current = latest.getNowHelping();
-            if (current != null) {
-                System.out.println("Now helping: " + current.getName()
-                        + " (" + current.getQuestion() + ") - waited "
-                        + current.getMinutesWaited() + " min");
-            }
-
-            for (LineEntry entry : latest.getWaiting()) {
-                System.out.println(entry.getPosition() + ". " + entry.getName()
-                        + " - " + entry.getQuestion() + " - "
-                        + entry.getMinutesWaited() + " min");
-            }
-
-            System.out.println("Helped: " + latest.getHelpedCount()
-                    + ", average wait "
-                    + String.format("%.1f", latest.getAverageWaitMinutes())
-                    + " min");
+            System.out.println("\nTA menu");
             System.out.println("1) Call next  2) Finish  3) Put back");
             System.out.println("4) Close line  5) Log out");
 

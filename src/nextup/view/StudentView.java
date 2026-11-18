@@ -1,9 +1,11 @@
+// CS 2114 Project 3, Deliverable 4 | Al-Farouq Mohamed
+// GenAI disclosure (D4): ChatGPT drafted the D4 student observer rendering and menu updates.
 
 package nextup.view;
 
 import nextup.controller.ActionResult;
-import nextup.model.LineEntry;
 import nextup.controller.LineController;
+import nextup.model.LineEntry;
 import nextup.model.LineObserver;
 import nextup.model.LineSnapshot;
 
@@ -12,24 +14,7 @@ public class StudentView implements LineObserver {
     private final LineController controller;
     private final ConsoleInput input;
     private final TaView taView;
-    // TODO(Al-Farouq, D4): two changes to this class (see TEAM-TODO.md).
-    //
-    // 1. Show the wait-time estimate next to each name:
-    //    entry.getEstimatedWaitMinutes() is the minutes, or -1 when nobody
-    //    has been helped yet. Print "1. Ana (3 min, about 5 more)" or
-    //    "1. Ana (3 min, estimate after first student)".
-    //
-    // 2. D4 Exceeds for "View connected to the model" is "the view keeps
-    //    no copy of model state", and the `latest` field below is a copy.
-    //    Remove it: draw the line inside update(snapshot) instead of
-    //    storing it. Only draw when controller.isTaMode() is false, or
-    //    the student and TA screens both print on every change. When
-    //    snapshot.isClosed(), print the final stats there and set a
-    //    boolean so run() stops. "3) Show the line" is no longer needed
-    //    (the line redraws itself after every change), so the menu
-    //    becomes 1 Join, 2 Leave, 3 TA login. ViewTest's scripts then use
-    //    "3" for TA login.
-    private LineSnapshot latest;
+    private boolean finished;
 
     /**
      * Creates the student view.
@@ -48,42 +33,59 @@ public class StudentView implements LineObserver {
         this.controller = controller;
         this.input = input;
         this.taView = taView;
-        latest = null;
     }
 
 
     /**
-     * Stores the newest snapshot. Called by the model.
+     * Renders the student screen while students have the keyboard.
      *
      * @param snapshot
      *            the new line
      */
     @Override
     public void update(LineSnapshot snapshot) {
-        latest = snapshot;
+        if (snapshot.isClosed()) {
+            finished = true;
+            System.out.println("Helped: " + snapshot.getHelpedCount());
+            System.out.printf("Average wait: %.1f min%n",
+                    snapshot.getAverageWaitMinutes());
+            return;
+        }
+        if (controller.isTaMode()) {
+            return;
+        }
+
+        System.out.println("\nStudent line");
+        LineEntry current = snapshot.getNowHelping();
+        if (current != null) {
+            System.out.println("Now helping: " + current.getName());
+        }
+        for (LineEntry entry : snapshot.getWaiting()) {
+            System.out.println(entry.getPosition() + ". " + entry.getName()
+                    + " (" + entry.getMinutesWaited() + " min, "
+                    + estimateText(entry) + ")");
+        }
     }
 
+    /**
+     * Formats the estimate the model supplied for a waiting student.
+     */
+    static String estimateText(LineEntry entry) {
+        int estimate = entry.getEstimatedWaitMinutes();
+        if (estimate == -1) {
+            return "estimate after first student";
+        }
+        return "about " + estimate + " more";
+    }
 
     /**
      * The main menu loop. Runs until the line is closed or input ends.
      */
     public void run() {
-        while (!latest.isClosed()) {
-            System.out.println();
-
-            LineEntry nowHelping = latest.getNowHelping();
-            if (nowHelping != null) {
-                System.out.println("Now helping: " + nowHelping.getName());
-            }
-
-            for (LineEntry entry : latest.getWaiting()) {
-                System.out.println(entry.getPosition() + ". " + entry.getName()
-                        + " (" + entry.getMinutesWaited() + " min)");
-            }
-
-            System.out.println("1) Join the line  2) Leave the line");
-            System.out.println("3) Show the line  4) TA login");
-            int choice = input.readMenuChoice("Choose: ", 4);
+        while (!finished) {
+            System.out.println("\nStudent menu");
+            System.out.println("1) Join the line  2) Leave the line  3) TA login");
+            int choice = input.readMenuChoice("Choose: ", 3);
 
             switch (choice) {
                 case -1:
@@ -127,10 +129,6 @@ public class StudentView implements LineObserver {
                     break;
 
                 case 3:
-                    // The next iteration redraws the line.
-                    break;
-
-                case 4:
                     String pin = input.readLine("TA PIN: ");
                     if (pin == null) {
                         return;
@@ -146,10 +144,5 @@ public class StudentView implements LineObserver {
                     break;
             }
         }
-
-        System.out.println("Helped: " + latest.getHelpedCount());
-        System.out.println("Average wait: "
-                + String.format("%.1f", latest.getAverageWaitMinutes())
-                + " min");
     }
 }
