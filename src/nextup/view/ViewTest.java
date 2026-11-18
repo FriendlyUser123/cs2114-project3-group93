@@ -1,6 +1,6 @@
 // CS 2114 Project 3, Deliverable 4 | Al-Farouq Mohamed
-// GenAI disclosure (D4): ChatGPT drafted the D4 estimate, Leave, and Put back tests and
-// updated the existing scripts for the student menu.
+// GenAI disclosure (D4): ChatGPT drafted the D4 estimate, Leave, and Put back
+// tests and updated the existing scripts for the student menu.
 
 package nextup.view;
 
@@ -19,7 +19,7 @@ import org.junit.Test;
 /**
  * Tests the student and TA views with scripted console input.
  *
- * @author Al-Farouq Mohamed
+ * @author Al-Farouq Mohamed (alfarouqm18)
  * @version 2026.11.08
  */
 public class ViewTest {
@@ -57,7 +57,7 @@ public class ViewTest {
                         + "abc\n"                  // Invalid menu choice.
                         + "1\n\nRecursion?\n"      // Join with a blank name.
                         + "y\nAna\nRecursion?\n"   // Retry with a valid name.
-                        + "3\n9999\n");            // Wrong PIN, then input ends.
+                        + "3\n9999\n"); // Wrong PIN, then input ends.
 
         assertTrue(output.contains("Enter a number 1 to 3."));
         assertTrue(output.contains("Try again? (y/n)"));
@@ -73,7 +73,8 @@ public class ViewTest {
         String output = captureOutput(() -> {
             try (Scanner scanner = new Scanner("")) {
                 ConsoleInput input = new ConsoleInput(scanner);
-                attachViews(line, controller, input, new TaView(controller, input));
+                attachViews(line, controller, input,
+                    new TaView(controller, input));
                 assertTrue(controller.setTaPin("1234").isOk());
                 assertTrue(controller.join("Ana", "Recursion?").isOk());
                 assertTrue(controller.join("Ben", "Generics?").isOk());
@@ -86,10 +87,12 @@ public class ViewTest {
             }
         });
 
-        assertTrue(output.contains("1. Ana (0 min, estimate after first student)"));
+        assertTrue(output.contains(
+            "1. Ana (0 min, estimate after first student)"));
         assertTrue(output.contains(
                 "1. Ben - Generics? - 0 min (estimate after first student)"));
-        assertTrue(output.contains("1. Ben - Generics? - 5 min (about 5 more)"));
+        assertTrue(output.contains(
+            "1. Ben - Generics? - 5 min (about 5 more)"));
         assertTrue(output.contains("1. Ben (5 min, about 5 more)"));
         assertTrue(output.contains("2. Cal (0 min, about 10 more)"));
     }
@@ -109,7 +112,8 @@ public class ViewTest {
         assertTrue(output.contains("Enter your ticket number, like 4821."));
         assertTrue(output.contains("You left the line."));
 
-        String finalRedraw = output.substring(output.lastIndexOf("Student line"));
+        String finalRedraw =
+            output.substring(output.lastIndexOf("Student line"));
         assertTrue(finalRedraw.contains("1. Ben ("));
         assertFalse(finalRedraw.contains("Ana"));
     }

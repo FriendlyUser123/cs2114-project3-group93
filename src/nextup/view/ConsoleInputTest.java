@@ -1,3 +1,8 @@
+// CS 2114 Project 3 | Al-Farouq Mohamed
+// GenAI disclosure: Al-Farouq Mohamed used ChatGPT (OpenAI) to help write
+// these tests. The test names and cases were laid out by Aditya Banerjee with
+// Claude (Anthropic). See the attribution table in README.md.
+
 package nextup.view;
 
 import static org.junit.Assert.assertEquals;
@@ -9,6 +14,12 @@ import java.util.Scanner;
 import java.util.regex.Pattern;
 import org.junit.Test;
 
+/**
+ * Tests ConsoleInput with scripted input instead of the keyboard.
+ *
+ * @author Al-Farouq Mohamed (alfarouqm18)
+ * @version 2026.11.12
+ */
 public class ConsoleInputTest {
 
     @Test

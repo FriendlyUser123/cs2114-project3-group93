@@ -1,5 +1,6 @@
 // CS 2114 Project 3, Deliverable 4 | Al-Farouq Mohamed
-// GenAI disclosure (D4): ChatGPT drafted the D4 student observer rendering and menu updates.
+// GenAI disclosure (D4): ChatGPT drafted the D4 student observer rendering
+// and menu updates.
 
 package nextup.view;
 
@@ -9,6 +10,14 @@ import nextup.model.LineEntry;
 import nextup.model.LineObserver;
 import nextup.model.LineSnapshot;
 
+/**
+ * The student screen. It sends every action to the controller and draws
+ * the line only from the snapshot passed to update, so it keeps no copy of
+ * the model's state.
+ *
+ * @author Al-Farouq Mohamed (alfarouqm18)
+ * @version 2026.11.17
+ */
 public class StudentView implements LineObserver {
 
     private final LineController controller;
@@ -84,7 +93,8 @@ public class StudentView implements LineObserver {
     public void run() {
         while (!finished) {
             System.out.println("\nStudent menu");
-            System.out.println("1) Join the line  2) Leave the line  3) TA login");
+            System.out.println(
+                "1) Join the line  2) Leave the line  3) TA login");
             int choice = input.readMenuChoice("Choose: ", 3);
 
             switch (choice) {

@@ -1,5 +1,6 @@
 // CS 2114 Project 3, Deliverable 4 | Al-Farouq Mohamed
-// GenAI disclosure (D4): ChatGPT drafted the D4 TA observer rendering and estimate display.
+// GenAI disclosure (D4): ChatGPT drafted the D4 TA observer rendering and
+// estimate display.
 
 package nextup.view;
 
@@ -9,6 +10,14 @@ import nextup.model.LineEntry;
 import nextup.model.LineObserver;
 import nextup.model.LineSnapshot;
 
+/**
+ * The TA screen. It sends every action to the controller and draws the
+ * line only from the snapshot passed to update, so it keeps no copy of the
+ * model's state.
+ *
+ * @author Al-Farouq Mohamed (alfarouqm18)
+ * @version 2026.11.17
+ */
 public class TaView implements LineObserver {
 
     private final LineController controller;

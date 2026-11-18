@@ -1,12 +1,12 @@
 # Next Up: who does what for Deliverable 4
 
-**Due: Fri Nov 20, 1:25 PM (start of lab).** Same repo, graded live as an oral exam, and the whole group attends. D3 got **Exceeds on every row**, so this sheet aims at Exceeds again.
+**We present on Wed Nov 18.** Canvas still lists Fri Nov 20, 1:25 PM. Same repo, graded live as an oral exam, and the whole group attends.
 
 > ⚠️ **The 50% rule (from the D4 assignment):** "Group members not contributing substantively to at least one class or test file will receive a 50% deduction on their group's deliverable." Everyone below has a real test or class file to write and commit **under your own GitHub account**.
 
-**Find your part:** in Eclipse, **Search → File Search** for `TODO(Nicolas`, `TODO(Ha Minh`, or `TODO(Al-Farouq`. It finds your code and your README slots.
+**Status:** every assigned part is merged, and all 70 tests pass.
 
-**Right now, `main` has 16 failing tests on purpose.** Each one is a stub that says whose it is (`fail("TODO(Name, D4): ...")`). You're done when none of yours are left and all tests are green.
+**One item is open:** Al-Farouq signs the Honor Pledge in `StudentView`, `TaView`, `ViewTest`, and `ConsoleInputTest`. Only he can sign it.
 
 ---
 
@@ -17,7 +17,7 @@
 - [x] 5 new tests in `OfficeHoursLineTest`, plus `ModelTypesTest` cases (`-2` throws)
 - [x] `ModelDemo` prints the estimate: `1.Cal(7m, est 4m) 2.Dee(0m, est 8m)`
 - [x] README: the D4 Reflection model rows, Next Steps, the timed demo draft, attribution, GenAI note
-- [ ] Review everyone's work; final README pass on Thu Nov 19
+- [x] Reviewed everyone's work; final README pass on Wed Nov 18
 
 **What you can use:** `entry.getEstimatedWaitMinutes()` on any `LineEntry` in a snapshot.
 
@@ -30,7 +30,7 @@
 | README → "Not in the prediction" | Add anything that surprised you once the others are merged. |
 | README → Attribution and GenAI note | Your `LinkedDequeTest` row and one GenAI sentence. |
 
-**Target: Mon Nov 16** for the test, **Wed Nov 18** for the README.
+**Done.**
 
 ## ✅ Ha Minh Nguyen: every bad input gets a test. DONE (13 tests green, controller unchanged)
 
@@ -42,13 +42,13 @@
 | README → Reflection → `LineController` row | Run the `git diff` command written there. No output means the controller didn't change, which is the Exceeds box for "Change feature." **Don't edit `LineController` or `ActionResult` in D4.** |
 | README → Attribution and GenAI note | Your `BadInputTest` row and one GenAI sentence. |
 
-**Target: Tue Nov 17.**
+**Done.**
 
 ## ✅ Al-Farouq Mohamed: the views show the estimate and keep no copy. DONE (merged in PR #2)
 
 | File | What to do |
 |---|---|
-| `src/nextup/view/StudentView.java` | Steps in the `TODO(Al-Farouq, D4)` comment above the `latest` field: (1) print the estimate next to each name; (2) remove `latest` and draw inside `update()`. |
+| `src/nextup/view/StudentView.java` | (1) Print the estimate next to each name; (2) remove `latest` and draw inside `update()`. |
 | `src/nextup/view/TaView.java` | The same two changes, with questions shown. |
 | `src/nextup/view/ViewTest.java` | Write `testShowsEstimates` and `testLeaveAndPutBack` (cases in their comments). If you change the student menu to 1 Join, 2 Leave, 3 TA login, also change the existing scripts' `4` (TA login) to `3`. |
 | README → Reflection | The `StudentView`/`TaView` row, "Did the change cross the model/view line?", and a views row in "What changed from our D3 plan". |
@@ -58,16 +58,16 @@
 
 **Rules (unchanged):** views import only `nextup.controller` and `LineObserver`, `LineSnapshot`, and `LineEntry` from the model. **Don't change `ConsoleInput` or `Runner`**, because our D3 prediction says they stay the same.
 
-**Target: Tue Nov 17.**
+**Done.**
 
 ---
 
-## Everyone: Thu Nov 19
+## Everyone: before we present
 
-- [ ] All tests green (right-click `src` → Run As → JUnit Test), and `Runner` runs the demo path with no crash
-- [ ] No `TODO(` left anywhere (Eclipse File Search)
-- [ ] Your name and LLM statement in every file you own
-- [ ] README: "What doesn't work yet", the stretch-goal decision (commit to or drop the Swing board), and who drives each part of the demo
+- [x] All tests green (right-click `src` → Run As → JUnit Test), and `Runner` runs the demo path with no crash
+- [x] No `TODO(` left anywhere (Eclipse File Search)
+- [ ] Your name, Honor Pledge, and LLM statement in every file you own (Al-Farouq: see above)
+- [x] README: "What doesn't work yet", the stretch-goal decision (commit to or drop the Swing board), and who drives each part of the demo
 - [ ] **Rehearse the 3-minute demo twice, timed.** The Exceeds box for Next Steps is that the demo fits in 3 minutes.
 - [ ] **Walk through every class together.** The TA can ask anyone about anything.
 
