@@ -220,24 +220,62 @@ public class LinkedDequeTest extends student.TestCase {
 
 
     /**
-     * D4 (Nicolas): order after INTERLEAVED enqueues and dequeues. This is
-     * the D4 rubric's Exceeds box for "JUnit Tests", so it must check the
-     * order after every step, not just at the end.
-     *
-     * Cases to write (one assert per arrow):
-     * <pre>
-     * enqueue a, enqueue b         -> dequeue gives a
-     * enqueue c                    -> toList is [b, c]
-     * dequeue                      -> b
-     * enqueue d, addToFront e      -> toList is [e, c, d]
-     * dequeue, dequeue             -> e, then c
-     * enqueue f                    -> toList is [d, f], size 2
-     * dequeue, dequeue             -> d, then f, then isEmpty() is true
-     * dequeue once more            -> NoSuchElementException (bad input)
-     * </pre>
+     * enqueue a, enqueue b -> dequeue gives a
+     * enqueue c -> toList is [b, c]
+     * dequeue -> b
+     * enqueue d, addToFront e -> toList is [e, c, d]
+     * dequeue, dequeue -> e, then c
+     * enqueue f -> toList is [d, f], size 2
+     * dequeue, dequeue -> d, then f, then isEmpty() is true
+     * dequeue once more -> NoSuchElementException (bad input)
      */
     public void testInterleavedOrder() {
-        // TODO(Nicolas, D4): replace this line with the cases above.
-        fail("TODO(Nicolas, D4): interleaved enqueue/dequeue order");
+        deque.enqueue("a");
+        assertEquals(Arrays.asList("a"), deque.toList());
+
+        deque.enqueue("b");
+        assertEquals(Arrays.asList("a", "b"), deque.toList());
+
+        assertEquals("a", deque.dequeue());
+        assertEquals(Arrays.asList("b"), deque.toList());
+
+        deque.enqueue("c");
+        assertEquals(Arrays.asList("b", "c"), deque.toList());
+
+        assertEquals("b", deque.dequeue());
+        assertEquals(Arrays.asList("c"), deque.toList());
+
+        deque.enqueue("d");
+        assertEquals(Arrays.asList("c", "d"), deque.toList());
+
+        deque.addToFront("e");
+        assertEquals(Arrays.asList("e", "c", "d"), deque.toList());
+
+        assertEquals("e", deque.dequeue());
+        assertEquals(Arrays.asList("c", "d"), deque.toList());
+
+        assertEquals("c", deque.dequeue());
+        assertEquals(Arrays.asList("d"), deque.toList());
+
+        deque.enqueue("f");
+        assertEquals(Arrays.asList("d", "f"), deque.toList());
+        assertEquals(2, deque.size());
+
+        assertEquals("d", deque.dequeue());
+        assertEquals(Arrays.asList("f"), deque.toList());
+
+        assertEquals("f", deque.dequeue());
+        assertTrue(deque.toList().isEmpty());
+        assertTrue(deque.isEmpty());
+        assertEquals(0, deque.size());
+
+        try {
+            deque.dequeue();
+            fail("Empty dequeue must throw.");
+        }
+        catch (NoSuchElementException expected) {
+            assertEquals(0, deque.size());
+            assertTrue(deque.isEmpty());
+        }
     }
 }
