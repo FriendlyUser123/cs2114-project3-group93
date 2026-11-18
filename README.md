@@ -101,6 +101,7 @@ java -Djava.security.manager=allow -cp out:student.jar org.junit.runner.JUnitCor
 - **`ModelDemo`:** we changed it to print the estimate, so the "model alone" demo shows the feature. It isn't part of the app, so the prediction didn't list it either way.
 - **`StudentView`, `TaView`:** we expected to change only what the views displayed, but we also changed when they displayed it. Removing the cached snapshots meant rendering directly in `update()` and removing the separate Show the line option. This kept the views from storing a copy of the model's state.
 - **`ViewTest` scripts:** the views moved TA login from student option `4` to `3` when Show the line was removed. Every scripted test that logged in as TA had to change its `4` to `3`. That is a view change rippling into view tests only, but the prediction didn't list it.
+- **`Runner` and the stretch goal:** in D3 we predicted no change to `Runner` because the wait-time estimate adds no new object: it travels inside `LineEntry` to observers that already exist. That held, and the estimate never touched `Runner`. Then we built the Swing board early, which is a different kind of change: a new view. `Runner` is the one place that creates objects and connects them, so a new observer has to be added there. The change stopped at that one spot, with no change to the model or controller. What we learned: a new field flows through the snapshot, while a new view costs only its own class and its wiring in `Runner`.
 - **No surprise in the controller:** all 13 `BadInputTest` cases passed against the D3 controller on the first run. The estimate added no new way for input to go wrong that the controller had to catch.
 
 ### Did the change cross the model/view line?
@@ -119,7 +120,7 @@ The estimate is computed entirely in the model, in the private `estimateMinutes`
 
 ### What doesn't work yet
 
-**All 70 tests pass (run Nov 18, with everything merged):** 8 `LinkedDequeTest`, 24 `OfficeHoursLineTest`, 8 `ModelTypesTest`, 1 `ModelBoundaryTest`, 8 `LineControllerTest`, 13 `BadInputTest`, 3 `ConsoleInputTest`, and 5 `ViewTest`.
+**All 76 tests pass (run Nov 18, with everything merged):** 8 `LinkedDequeTest`, 24 `OfficeHoursLineTest`, 8 `ModelTypesTest`, 1 `ModelBoundaryTest`, 8 `LineControllerTest`, 13 `BadInputTest`, 3 `ConsoleInputTest`, 5 `ViewTest`, and 6 `BoardViewTest`.
 
 **What we ran in `Runner`, all with no crash:**
 - **The demo path:** set PIN `1234`; Ana and Ben join; Ben sees "estimate after first student"; the TA logs in, calls Ana, and finishes her; Ben then sees "about 1 more"; the TA calls and finishes Ben, then closes the line, and the final stats print.
@@ -158,7 +159,7 @@ One design change that would make future features cheaper is using the Builder p
 |---|---|---|
 | 0:00–0:30 | **The model alone:** run `ModelDemo` and point at `1.Cal(7m, est 4m) 2.Dee(0m, est 8m)`. That's the estimate, with no view. | Aditya |
 | 0:30–1:00 | **Tests:** run all of `src` as JUnit and show it all green. Point at `testEstimateAfterTwoSessions`, `testInterleavedOrder`, and `BadInputTest`. | Nicolas |
-| 1:00–2:15 | **The real program:** run `Runner`. Set PIN `1234`; Ana and Ben join; Ben sees "estimate after first student". TA logs in, calls Ana, finishes her a few seconds later; Ben now sees "about 1 more". | Al-Farouq |
+| 1:00–2:15 | **The real program:** run `Runner`. Set PIN `1234`; Ana and Ben join; Ben sees "estimate after first student". TA logs in, calls Ana, finishes her a few seconds later; Ben now shows "about 1 more". The Swing board updates beside the terminal at each step. | Al-Farouq |
 | 2:15–2:45 | **Bad input:** `abc` at the menu, a blank name, a wrong PIN, Call next while helping. Each prints its message and nothing crashes. | Ha Minh |
 | 2:45–3:00 | **Close the line:** the final stats, and one sentence on the MVC split: the views only call the controller, and the model tells them about changes through `LineObserver`. | Ha Minh |
 

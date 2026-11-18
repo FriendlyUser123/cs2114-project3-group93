@@ -73,7 +73,7 @@
 
 ## Don't break these (they're Exceeds boxes)
 
-1. **Don't edit `LineController`, `ActionResult`, `LinkedDeque`, `LineSnapshot`, `ConsoleInput`, or `Runner`.** Our D3 prediction said they wouldn't change.
+1. **Don't edit `LineController`, `ActionResult`, `LinkedDeque`, `LineSnapshot`, `ConsoleInput`, or `Runner`.** Our D3 prediction said they wouldn't change. One later exception: Aditya added the Swing board stretch goal to `Runner`; the estimate feature itself never touched it.
 2. **Tests must target the model, not the UI.** `ViewTest` is extra; the graded tests are the model and queue tests.
 
 ## How to work in the repo
