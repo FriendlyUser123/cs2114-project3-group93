@@ -50,12 +50,12 @@ It runs on one laptop, with the student screen as the home screen. A sample run 
 |---|---|---|
 | 1. The TA sets a PIN at startup | `1234` | `TA PIN set.` (a PIN that isn't 4 to 8 digits is asked for again) |
 | 2. A student joins | `1`, then a name (`Ana`) and a question (`Recursion?`) | `You're #1. Your ticket is 6916.` The line shows `1. Ana (0 min)`, names only. |
-| 3. The TA logs in | `4`, then `1234` | The TA screen, which shows each question: `1. Ana - Recursion? - 0 min` |
+| 3. The TA logs in | `3`, then `1234` | The TA menu. The TA line and questions appear after the next successful line action. |
 | 4. Call the next student | `1` | `Now helping: Ana` |
 | 5. Finish with them | `2` | `Finished helping the current student.` and `Helped: 1` |
 | 6. Close the line | `4` | `The line is closed.`, then the final stats, and the program ends |
 
-Other choices: a student can leave with `2` and their ticket number. The TA can put the current student back at the front with `3`, or log out with `5`. Ending input (Ctrl+D) stops the program cleanly from either screen.
+The active screen redraws the queue when the line changes. Before the first finished help session it shows “estimate after first student.” After a session, it shows an estimate such as “about 5 more.” A student can leave with `2` and their ticket number. The TA can put the current student back at the front with `3`, or log out with `5`. Ending input (Ctrl+D) stops the program cleanly from either screen.
 
 ### From a terminal, without Eclipse
 
@@ -88,7 +88,7 @@ java -Djava.security.manager=allow -cp out:student.jar org.junit.runner.JUnitCor
 |---|---|---|---|
 | `OfficeHoursLine` | Yes: field `totalHelpMillis`, `finishCurrent()` adds to it, new private `estimateMinutes(int)`, `getSnapshot()` passes it into each `LineEntry` | Exactly those four. Two small extras: the private helper `toEntry` takes the estimate as a parameter, and `putBack`'s Javadoc now says a put-back is not a finished session | ✅ |
 | `LineEntry` | Yes: field `estimatedWaitMinutes`, constructor parameter, getter `getEstimatedWaitMinutes()` | Exactly those three. The constructor also rejects estimates below `-1` | ✅ |
-| `StudentView`, `TaView` | Yes: print "about N min" or the no-estimate text | **TODO(Al-Farouq):** what you changed | |
+| `StudentView`, `TaView` | Yes: print "about N min" or the no-estimate text | Both views display the estimate or the first-session message in `update`. The student screen displays names and the TA screen also displays questions. | ✅ |
 | `LineSnapshot` | No | Unchanged. The estimate rides along inside each `LineEntry` | ✅ |
 | `LineController`, `ActionResult` | No | **TODO(Ha Minh):** confirm with `git diff ca5c846 -- src/nextup/controller/LineController.java src/nextup/controller/ActionResult.java` (no output = unchanged) | |
 | `LinkedDeque`, `HelpRequest`, `LineObserver`, `TimeSource`, `ConsoleInput`, `Runner` | No | Unchanged so far. **TODO(team):** re-check after the views are merged | ✅ so far |
@@ -100,7 +100,7 @@ java -Djava.security.manager=allow -cp out:student.jar org.junit.runner.JUnitCor
 
 ### Did the change cross the model/view line?
 
-The estimate is computed entirely in the model, in the private `estimateMinutes`. It reaches the views the same way every other number does: inside `LineEntry`, through `update(LineSnapshot)`. The views use no new import and call no new model method beyond one getter, and `ModelBoundaryTest` still passes. **TODO(Al-Farouq):** confirm that the views needed nothing else from the model.
+The estimate is computed entirely in the model, in the private `estimateMinutes`. It reaches the views the same way every other number does: inside `LineEntry`, through `update(LineSnapshot)`. The views use no new import and call no new model method beyond one getter, and `ModelBoundaryTest` still passes. Both views render directly from the callback and retain no snapshot or queue data. The student view uses a local loop-exit flag set by the close notification. The views needed no other model API.
 
 ### What changed from our D3 plan
 
@@ -110,7 +110,7 @@ The estimate is computed entirely in the model, in the private `estimateMinutes`
 | "Rounded up to minutes" | Kept, and tested (`testEstimateRoundsUp`: one 90-second session puts the front of the line at 2 minutes, not 1) | Rounding down would promise "0 min" to the front of the line after short sessions |
 | New tests in `OfficeHoursLineTest` and `ModelTypesTest` | All of those, plus a new test file, `BadInputTest`, with one test per row of our validation table | The D4 rubric's Exceeds box for bad input is "each bad-input case has a test" |
 | No change to `LinkedDequeTest` | Added `testInterleavedOrder` | The D4 rubric's Exceeds box for JUnit tests is "order after interleaved enqueues and dequeues" |
-| **TODO(Al-Farouq):** the views | | |
+| Both views print estimates, and the student menu gets a screen heading | The observer callback redraws the active queue and the menus are labeled Student and TA. Student option 3 is now TA login. | Drawing from notifications let us remove both cached snapshots and the separate Show the line option. Switching roles displays the new menu immediately and the queue redraws on the next successful line action. |
 
 ### What doesn't work yet
 
@@ -209,16 +209,16 @@ One row per class and test file. "How" means wrote, revised, reviewed, tested, o
 | `controller/LineControllerTest.java` | Ha Minh Nguyen | Written by Ha Minh with GenAI (ChatGPT). Test names and cases laid out by Aditya with Claude. |
 | `controller/BadInputTest.java` | Ha Minh Nguyen | **TODO(Ha Minh)**: how you wrote it. Test names and cases laid out by Aditya with Claude from our D2 validation table. |
 | `view/ConsoleInput.java` | Al-Farouq Mohamed, Aditya Banerjee | Written by Al-Farouq with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. Aditya fixed the prompt order in `readLine` after a hand run. |
-| `view/StudentView.java` | Al-Farouq Mohamed, Aditya Banerjee | Written by Al-Farouq with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. Aditya fixed the average-wait format after the first full run. D4: **TODO(Al-Farouq)** how you added the estimate. |
-| `view/TaView.java` | Al-Farouq Mohamed, Aditya Banerjee | Written by Al-Farouq with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. Aditya fixed the average-wait format after the first full run. D4: **TODO(Al-Farouq)** how you added the estimate. |
+| `view/StudentView.java` | Al-Farouq Mohamed, Aditya Banerjee | Written by Al-Farouq with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. Aditya fixed the average-wait format after the first full run. D4: ChatGPT drafted the estimate display and observer-based redraw for Al-Farouq’s assigned view work. |
+| `view/TaView.java` | Al-Farouq Mohamed, Aditya Banerjee | Written by Al-Farouq with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. Aditya fixed the average-wait format after the first full run. D4: ChatGPT drafted the estimate display and observer-based redraw for Al-Farouq’s assigned view work. |
 | `view/ConsoleInputTest.java` | Al-Farouq Mohamed | Written by Al-Farouq with GenAI (ChatGPT). Test names and cases laid out by Aditya with Claude. |
-| `view/ViewTest.java` | Al-Farouq Mohamed | Written by Al-Farouq with GenAI (ChatGPT). Test names and cases laid out by Aditya with Claude. D4: **TODO(Al-Farouq)** how you wrote the two new tests (cases laid out by Aditya with Claude). |
+| `view/ViewTest.java` | Al-Farouq Mohamed | Written by Al-Farouq with GenAI (ChatGPT). Test names and cases laid out by Aditya with Claude. D4: ChatGPT drafted the deterministic estimate test and the scripted Leave and Put back test from the cases Aditya laid out with Claude. |
 
 ## GenAI note
 
 Aditya used Claude Code (Anthropic) to set up this repository. It was given our D2 specification and test plan and the D3 instructions and rubric. It generated the skeleton of every class (packages, signatures, Javadoc, and TODO steps) and the test method names and cases for each test file. It then wrote the line half of the model: `OfficeHoursLine`, the small model types, the two test helpers, `ModelDemo`, and the model tests. Aditya reviewed that code and ran the tests; all 28 pass.
 
-**D4:** Aditya used Claude Code again to add the wait-time estimate to the model (`OfficeHoursLine`, `LineEntry`), its tests, and the `ModelDemo` output, following our D3 prediction table. It also laid out the D4 test stubs and TODO steps for the others (`testInterleavedOrder`, the two new `ViewTest` cases, and `BadInputTest`) from the D4 rubric and our D2 validation table. Aditya reviewed the estimate math by hand against the test cases (4- and 6-minute sessions give 5, 10, 15) and ran every test. **TODO(Nicolas, Ha Minh, Al-Farouq):** one sentence each on how you did your D4 part.
+**D4:** Aditya used Claude Code again to add the wait-time estimate to the model (`OfficeHoursLine`, `LineEntry`), its tests, and the `ModelDemo` output, following our D3 prediction table. It also laid out the D4 test stubs and TODO steps for the others (`testInterleavedOrder`, the two new `ViewTest` cases, and `BadInputTest`) from the D4 rubric and our D2 validation table. Aditya reviewed the estimate math by hand against the test cases (4- and 6-minute sessions give 5, 10, 15) and ran every test. **Al-Farouq’s D4 work:** OpenAI ChatGPT drafted the Java changes for both views, wrote and ran the view tests with JUnit, and drafted the corresponding README entries. **TODO(Nicolas, Ha Minh):** one sentence each on how you did your D4 part.
 
 Following the D3 tip, Aditya described our classes to Claude and asked which ones wait-time estimates would force us to edit. Its list was `OfficeHoursLine`, `LineEntry`, and both views, with no controller changes. That list stays on the correct sides of our model/view line, so we kept the feature. Claude's list is the prediction table in Next Steps.
 
