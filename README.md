@@ -15,7 +15,7 @@ The line is a **queue we wrote ourselves**: `LinkedDeque<T>`, a doubly linked de
 | `nextup.model` | `LinkedDeque<T>`, `HelpRequest`, `OfficeHoursLine`, `LineObserver`, `LineSnapshot`, `LineEntry`, `TimeSource`, `LineRuleException` | The line and all its rules. No view, no controller, no `System.out`. |
 | `nextup.model` (test helpers) | `FakeTimeSource`, `RecordingObserver` | A clock tests set by hand, and an observer that counts updates. |
 | `nextup.controller` | `LineController`, `ActionResult`, `Runner` | Carries actions to the model, owns TA login, wires the program. |
-| `nextup.view` | `StudentView`, `TaView`, `ConsoleInput` | The terminal screens and the program's only `Scanner`. |
+| `nextup.view` | `StudentView`, `TaView`, `ConsoleInput`, `BoardView` | The terminal screens, the program's only `Scanner`, and the live Swing board. |
 | `nextup.demo` | `ModelDemo` | Runs the model alone, with no view. |
 
 ## How to run
@@ -57,6 +57,8 @@ It runs on one laptop, with the student screen as the home screen. A sample run 
 
 The active screen redraws the queue when the line changes. Before the first finished help session it shows “estimate after first student.” After a session, it shows an estimate such as “about 5 more.” A student can leave with `2` and their ticket number. The TA can put the current student back at the front with `3`, or log out with `5`. Ending input (Ctrl+D) stops the program cleanly from either screen.
 
+**The Swing board (D5 stretch goal):** `Runner` also opens a "Next Up" window for the room. It shows who is being helped, who is waiting with their estimates, and the totals, and it updates on every change. All typing stays in the terminal. Questions and tickets never appear on it. After the line closes, the program ends when you close the window. Without a display, `Runner` skips the board and the terminal works as usual.
+
 ### From a terminal, without Eclipse
 
 ```
@@ -67,7 +69,8 @@ java -cp out nextup.controller.Runner
 java -Djava.security.manager=allow -cp out:student.jar org.junit.runner.JUnitCore \
   nextup.model.LinkedDequeTest nextup.model.OfficeHoursLineTest nextup.model.ModelTypesTest \
   nextup.model.ModelBoundaryTest nextup.controller.LineControllerTest \
-  nextup.controller.BadInputTest nextup.view.ConsoleInputTest nextup.view.ViewTest
+  nextup.controller.BadInputTest nextup.view.ConsoleInputTest nextup.view.ViewTest \
+  nextup.view.BoardViewTest
 ```
 
 (`-Djava.security.manager=allow` is needed only on Java 18 or newer.)
@@ -91,7 +94,7 @@ java -Djava.security.manager=allow -cp out:student.jar org.junit.runner.JUnitCor
 | `StudentView`, `TaView` | Yes: print "about N min" or the no-estimate text | Both views display the estimate or the first-session message in `update`. The student screen displays names and the TA screen also displays questions. | ✅ |
 | `LineSnapshot` | No | Unchanged. The estimate rides along inside each `LineEntry` | ✅ |
 | `LineController`, `ActionResult` | No | No code changed. `git diff ca5c846 -- src/nextup/controller/LineController.java src/nextup/controller/ActionResult.java` shows only the filled-in LLM Statement in the header comment. The new `BadInputTest` drives the controller as it was, with no new method | ✅ |
-| `LinkedDeque`, `HelpRequest`, `LineObserver`, `TimeSource`, `ConsoleInput`, `Runner` | No | Unchanged after the views were merged. `git diff ca5c846` on all six files shows no code change (only the header comments of `Runner` and `ConsoleInput`, and `ConsoleInput`'s `@author` line) | ✅ |
+| `LinkedDeque`, `HelpRequest`, `LineObserver`, `TimeSource`, `ConsoleInput`, `Runner` | No | Unchanged after the views were merged. `git diff ca5c846` on all six files shows no code change (only the header comments of `Runner` and `ConsoleInput`, and `ConsoleInput`'s `@author` line). This row describes D4; the D5 Swing board later added its wiring to `Runner` | ✅ |
 
 **Not in the prediction (what surprised us):**
 - **`ModelTypesTest`:** adding one constructor parameter to `LineEntry` meant editing all **nine** existing `new LineEntry(...)` calls in this test. The prediction listed the new test cases but not this ripple.
@@ -136,7 +139,7 @@ One design change that would make future features cheaper is using the Builder p
 | # | Item | Owner |
 |---|---|---|
 | 1 | Nothing is failing now. Fix anything the D4 grading session turns up | Owner of that class |
-| 2 | Stretch goal: build the live "Now Helping" Swing board and its tests (plan below) | Aditya |
+| 2 | Stretch goal: the live "Now Helping" Swing board and its tests (**done**) | Aditya |
 | 3 | Final README pass: How to run, Reflection, attribution | Aditya |
 | 4 | Rehearse the 3-minute demo below twice, timed, with a different person driving each time | Everyone |
 
@@ -145,7 +148,7 @@ One design change that would make future features cheaper is using the Builder p
 | Stretch goal (D1) | Decision |
 |---|---|
 | Wait-time estimates | **Done.** It was our D4 change feature. |
-| Live "Now Helping" Swing board | **Committed for D5. Owner: Aditya.** A new `BoardView` will be a third `LineObserver`, showing who is being helped and who is waiting. It runs in the same program as the terminal views, so it gets the same updates, and `Runner` needs only the code that creates it and adds it as an observer. No model or controller change. The terminal keeps the main thread; `update` hands each immutable `LineSnapshot` to Swing with `SwingUtilities.invokeLater`, and the board stores no copy of it. Tests will check the text built from a snapshot (nobody helped, someone helped, empty line, closed line, with and without estimates), so they run without opening a window. |
+| Live "Now Helping" Swing board | **Done (D5). Owner: Aditya.** `BoardView` is a third `LineObserver` in the same program as the terminal views. `Runner` creates it and adds it as an observer; the model and controller did not change. The terminal keeps the main thread, `update` hands each immutable `LineSnapshot` to Swing with `SwingUtilities.invokeLater`, and the board stores no copy. `BoardViewTest` checks the board text and updates without opening a window. |
 | Two TAs, one line | **Dropped** (D3). Too big alongside the change feature. |
 | Save and restore the line | **Dropped** (D3). File I/O adds error cases that have nothing to do with the Queue. |
 
@@ -167,7 +170,7 @@ One design change that would make future features cheaper is using the Builder p
 | Views: show the estimate, keep no copy of model state, `ViewTest` cases | Al-Farouq (**done**) |
 | `testInterleavedOrder`, Reflection: "what would make the next feature cheaper" and "what surprised us" | Nicolas (**done**) |
 | `BadInputTest`, the "Bad input → test" table, confirm the controller is unchanged | Ha Minh (**done**) |
-| D5 stretch goal: Swing `BoardView`, its `Runner` wiring, and its tests | Aditya |
+| D5 stretch goal: Swing `BoardView`, its `Runner` wiring, and its tests | Aditya (**done**) |
 
 ### Bad input → test
 
@@ -215,7 +218,7 @@ One row per class and test file. "How" means wrote, revised, reviewed, tested, o
 | `demo/ModelDemo.java` | Aditya Banerjee | Written with GenAI (Claude); reviewed and run by Aditya. D4: shows the estimate, revised with Claude. |
 | `controller/ActionResult.java` | Ha Minh Nguyen | Written by Ha Minh with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. |
 | `controller/LineController.java` | Ha Minh Nguyen | Written by Ha Minh with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. |
-| `controller/Runner.java` | Ha Minh Nguyen | Written by Ha Minh with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. |
+| `controller/Runner.java` | Ha Minh Nguyen, Aditya Banerjee | Written by Ha Minh with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. D5: Aditya added the Swing board wiring with Claude. |
 | `controller/LineControllerTest.java` | Ha Minh Nguyen | Written by Ha Minh with GenAI (ChatGPT). Test names and cases laid out by Aditya with Claude. |
 | `controller/BadInputTest.java` | Ha Minh Nguyen | Test bodies and helpers written with GenAI (Claude Code) for Ha Minh, from the cases in each test's comment; reviewed and run by Ha Minh. Test names and cases laid out by Aditya with Claude from our D2 validation table. |
 | `view/ConsoleInput.java` | Al-Farouq Mohamed, Aditya Banerjee | Written by Al-Farouq with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. Aditya fixed the prompt order in `readLine` after a hand run and, with Claude, filled in the header disclosure and `@author` line for D4. |
@@ -223,6 +226,8 @@ One row per class and test file. "How" means wrote, revised, reviewed, tested, o
 | `view/TaView.java` | Al-Farouq Mohamed, Aditya Banerjee | Written by Al-Farouq with GenAI (ChatGPT). Skeleton generated by Aditya with Claude from our D2 spec. Aditya fixed the average-wait format after the first full run. D4: ChatGPT drafted the estimate display and observer-based redraw for Al-Farouq’s assigned view work. |
 | `view/ConsoleInputTest.java` | Al-Farouq Mohamed, Aditya Banerjee | Written by Al-Farouq with GenAI (ChatGPT). Test names and cases laid out by Aditya with Claude. Aditya added the header disclosure and class comment with Claude for D4. |
 | `view/ViewTest.java` | Al-Farouq Mohamed | Written by Al-Farouq with GenAI (ChatGPT). Test names and cases laid out by Aditya with Claude. D4: ChatGPT drafted the deterministic estimate test and the scripted Leave and Put back test from the cases Aditya laid out with Claude. |
+| `view/BoardView.java` | Aditya Banerjee | D5 stretch goal, written with GenAI (Claude) from our plan; reviewed and run by Aditya. |
+| `view/BoardViewTest.java` | Aditya Banerjee | D5 tests written with GenAI (Claude); reviewed and run by Aditya. |
 
 ## GenAI note
 
@@ -232,7 +237,9 @@ Aditya used Claude Code (Anthropic) to set up this repository. It was given our 
 
 Following the D3 tip, Aditya described our classes to Claude and asked which ones wait-time estimates would force us to edit. Its list was `OfficeHoursLine`, `LineEntry`, and both views, with no controller changes. That list stays on the correct sides of our model/view line, so we kept the feature. Claude's list is the prediction table in the D3 Next Steps, under "Deliverable 3 record".
 
-Nicolas, Ha Minh, and Al-Farouq used ChatGPT (OpenAI) to help complete their parts: the Queue (`LinkedDeque` and its tests), the controller (`ActionResult`, `LineController`, `Runner`, and `LineControllerTest`), and the views (`ConsoleInput`, `StudentView`, `TaView`, and their tests). Each started from the skeleton and the TODO steps in their files, which came from our D2 spec. All 70 tests now pass, and the D4 demo path and its bad inputs were run by hand in `Runner` (see "What doesn't work yet").
+Nicolas, Ha Minh, and Al-Farouq used ChatGPT (OpenAI) to help complete their parts: the Queue (`LinkedDeque` and its tests), the controller (`ActionResult`, `LineController`, `Runner`, and `LineControllerTest`), and the views (`ConsoleInput`, `StudentView`, `TaView`, and their tests). Each started from the skeleton and the TODO steps in their files, which came from our D2 spec. All 70 D4 tests passed, and the D4 demo path and its bad inputs were run by hand in `Runner` (see "What doesn't work yet").
+
+**D5:** Aditya used Claude Code to write the Swing board (`BoardView`), its `Runner` wiring, and `BoardViewTest` from the plan in our Stretch goals table.
 
 ## Deliverable 3 record
 
